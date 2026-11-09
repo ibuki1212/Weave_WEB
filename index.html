@@ -58,6 +58,15 @@
   }
   .paused .ribbons g{animation-play-state:paused}
 
+  #ribbons {
+    position: absolute; inset:0;
+    width:100%; height:100%;
+    z-index:0; touch-action:none;
+    cursor: default;
+  }
+  #ribbons.can-grab {cursor: grab}
+  #ribbons.gragging{cursor:grabbing}
+
   /* ---------- Headline ---------- */
   .headline{
     position:absolute;
@@ -68,13 +77,15 @@
     font-weight:700;
     letter-spacing:.01em;
     z-index:2;
+    pointer-events: none;
+    user-select: none;
   }
   .headline span{display:block}
   .headline span:nth-child(2){padding-left:.9em}
 
   /* ---------- Motion button ---------- */
   .motion{
-    position:absolute;top:24px;right:36px;z-index:5;
+    position:absolute;top:150px;right:36px;z-index:5;
     display:flex;align-items:center;gap:12px;
     padding:12px 18px;
     font:500 18px/1 inherit;font-family:inherit;
@@ -121,11 +132,10 @@
 
   /* ---------- Bottom nav pill ---------- */
   .nav{
-    position:absolute;left:24px;right:24px;bottom:-1px;z-index:6;
+    position:absolute;left:24px;right:24px;top:20px;z-index:6;
     height:116px;
     display:flex;align-items:center;justify-content:space-between;
     padding:0 48px;
-    background:rgba(251,249,247,.94);
     border-radius:36px 36px 0 0;
     backdrop-filter:blur(12px);
   }
@@ -179,6 +189,25 @@
   @media (prefers-reduced-motion:reduce){
     .ribbons g,.scroll::before{animation:none}
   }
+
+  .circle {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  .circle .circle-1 {
+    position: absolute;
+    display: inline-block;
+    width: 5000px;
+    height: 5000px;
+    border-radius: 50%;
+    text-align: center;
+    border: solid 30px skyblue;
+    right: -300px;
+    bottom: -40px;
+
+  }
 </style>
 </head>
 <body>
@@ -186,12 +215,6 @@
 
   <!-- 装飾リボン -->
   <svg class="ribbons" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <!-- 白い帯 -->
-    <g>
-      <path class="r-white" d="M-60 400 C150 380 330 400 640 385 C900 400 1100 440 1400 410"/>
-      <path class="r-white" d="M200 560 C500 520 800 540 1100 580 C1250 600 1400 590 1480 575"/>
-      <path class="r-white" d="M1230 475 C1450 460 1600 500 1900 465"/>
-    </g>
     <!-- 黄色 -->
     <g>
       <path class="r-yellow" d="M1220 -10 C900 60 600 180 460 360 C380 470 400 600 470 710 C560 850 750 920 900 970"/>
@@ -209,17 +232,22 @@
       <path class="r-teal" d="M1715 -10 C1715 150 1680 330 1560 500 C1480 610 1420 650 1300 700 C1150 760 1000 800 880 910 C850 940 820 970 790 1000"/>
     </g>
   </svg>
+  <div class="circle">
+    <div class="circle-1"></div>
+  </div>
+  
 
   <button class="motion" id="motionBtn" aria-pressed="false" aria-label="アニメーションの再生・停止">
     Motion <span class="bars"><i></i><i></i></span>
   </button>
 
   <h1 class="headline">
-    <span>Weaving</span>
-    <span>Tomorrow</span>
+    <span>From City to </span>
+    <span>Regions</span>
   </h1>
 
   <div class="scroll" aria-hidden="true">Scroll</div>
+
 
   <!-- ナビゲーション -->
   <header class="nav">
@@ -228,7 +256,7 @@
         <rect x="5" y="5" width="30" height="30" rx="6"/>
         <path d="M5 14c10 0 10 12 20 12s10-8 10-8M5 26c10 0 10-12 20-12"/>
       </svg>
-      Weave City
+      Setouchi Mirai 
     </a>
     <nav aria-label="メインメニュー">
       <ul class="menu">
