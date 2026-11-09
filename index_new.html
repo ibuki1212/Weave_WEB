@@ -422,32 +422,33 @@
     </div>
   </section>
 
-  <div class="gallery">
-  <h2 class="title">Gallery</h2>
- 
-  <div class="stage" id="stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Gallery">
-    <div class="track" id="track"></div>
- 
-    <button class="arrow prev" id="prev" aria-label="前の写真">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
-    </button>
-    <button class="arrow next" id="next" aria-label="次の写真">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
-    </button>
-  </div>
- 
-  <div class="foot">
-    <div class="counter" aria-live="polite">
-      <span class="count" id="count">1/8</span>
-      <span class="bar"><i id="fill"></i></span>
+  <section class="gallery">
+    <h2 class="title">Gallery</h2>
+  
+    <div class="stage" id="stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Gallery">
+      <div class="track" id="track"></div>
+  
+      <button class="arrow prev" id="prev" aria-label="前の写真">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
+      </button>
+      <button class="arrow next" id="next" aria-label="次の写真">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
+      </button>
     </div>
-    <a class="cta" href="#">
-      Go to Media Kits
-      <span class="circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
-      </span>
-    </a>
-  </div>
+  
+    <div class="foot">
+      <div class="counter" aria-live="polite">
+        <span class="count" id="count">1/8</span>
+        <span class="bar"><i id="fill"></i></span>
+      </div>
+      <a class="cta" href="#">
+        Go to Media Kits
+        <span class="circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+    </div>
+    </section>
 </div>
  
 <dialog id="lightbox" aria-label="拡大表示">
@@ -531,145 +532,145 @@
     { alt:'Quiet street on a cloudy day' },
     { alt:'Plaza after dark' },
     { alt:'Spring morning by the studio' },
-  ];
+    ];
  
-  /* ---- ダミー画像(SVG)を生成 ---- */
-  const palettes = [
-    ['#1b8be0','#a6d4f6','#d6d9dd','#8a919b','#6aa84f'],
-    ['#f09a50','#fbe3b8','#ecd9c4','#a8745a','#7c9a5a'],
-    ['#37468a','#9ca7da','#cdd2e6','#5f6aa0','#4d7a6a'],
-    ['#5ec8b4','#d6f3ea','#eef1ee','#8fa6a0','#78b36b'],
-    ['#e5775a','#f9d6bc','#f1e1d2','#b0675a','#8aa860'],
-    ['#7e94a8','#dde5ec','#e4e7ea','#7d8793','#7fa07a'],
-    ['#1f2a55','#5a669f','#aab2d4','#49527f','#35564a'],
-    ['#7ec4f2','#f6f1d1','#fbfbf8','#a3aab3','#8cc36a'],
-  ];
-  function scene(i){
-    const [sky1,sky2,wall,roof,grass] = palettes[i % palettes.length];
-    const bx = 260 + (i*53)%260, bw = 720 + (i*41)%200, by = 360 + (i%3)*20, bh = 250;
-    let windows='';
-    const cols = 8 + i%3, rows = 3;
-    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++){
-      const x = bx+30 + c*((bw-60)/cols), y = by+34 + r*70;
-      windows += `<rect x="${x.toFixed(0)}" y="${y}" width="${((bw-60)/cols-18).toFixed(0)}" height="44" rx="4" fill="#2b3a5c" opacity=".55"/>`;
+    /* ---- ダミー画像(SVG)を生成 ---- */
+    const palettes = [
+      ['#1b8be0','#a6d4f6','#d6d9dd','#8a919b','#6aa84f'],
+      ['#f09a50','#fbe3b8','#ecd9c4','#a8745a','#7c9a5a'],
+      ['#37468a','#9ca7da','#cdd2e6','#5f6aa0','#4d7a6a'],
+      ['#5ec8b4','#d6f3ea','#eef1ee','#8fa6a0','#78b36b'],
+      ['#e5775a','#f9d6bc','#f1e1d2','#b0675a','#8aa860'],
+      ['#7e94a8','#dde5ec','#e4e7ea','#7d8793','#7fa07a'],
+      ['#1f2a55','#5a669f','#aab2d4','#49527f','#35564a'],
+      ['#7ec4f2','#f6f1d1','#fbfbf8','#a3aab3','#8cc36a'],
+    ];
+    function scene(i){
+      const [sky1,sky2,wall,roof,grass] = palettes[i % palettes.length];
+      const bx = 260 + (i*53)%260, bw = 720 + (i*41)%200, by = 360 + (i%3)*20, bh = 250;
+      let windows='';
+      const cols = 8 + i%3, rows = 3;
+      for (let r=0;r<rows;r++) for (let c=0;c<cols;c++){
+        const x = bx+30 + c*((bw-60)/cols), y = by+34 + r*70;
+        windows += `<rect x="${x.toFixed(0)}" y="${y}" width="${((bw-60)/cols-18).toFixed(0)}" height="44" rx="4" fill="#2b3a5c" opacity=".55"/>`;
+      }
+      let trees='';
+      for (let t=0;t<7;t++){
+        const x = 120 + t*(1360/6) + ((i*29+t*47)%60);
+        const s = 34 + ((i+t)*13)%26;
+        trees += `<rect x="${x-4}" y="${600-s}" width="8" height="${s+30}" fill="#5a4a3a"/><circle cx="${x}" cy="${600-s-8}" r="${s}" fill="${grass}"/>`;
+      }
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky1}"/><stop offset="1" stop-color="${sky2}"/></linearGradient></defs>
+        <rect width="1600" height="900" fill="url(#g)"/>
+        <circle cx="${1200-i*40}" cy="${170+(i%4)*20}" r="70" fill="#fff" opacity=".75"/>
+        <ellipse cx="320" cy="180" rx="190" ry="48" fill="#fff" opacity=".8"/>
+        <ellipse cx="520" cy="215" rx="150" ry="38" fill="#fff" opacity=".7"/>
+        <ellipse cx="1080" cy="120" rx="170" ry="40" fill="#fff" opacity=".75"/>
+        <polygon points="0,520 220,400 430,520 640,420 900,540 1200,430 1600,560 1600,640 0,640" fill="${roof}" opacity=".35"/>
+        <rect y="590" width="1600" height="310" fill="${grass}"/>
+        <polygon points="0,900 0,780 1600,700 1600,900" fill="#6d7480"/>
+        <polygon points="0,830 1600,745 1600,760 0,846" fill="#f1f1f1" opacity=".8"/>
+        <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${wall}"/>
+        <polygon points="${bx-24},${by} ${bx+bw+24},${by} ${bx+bw-30},${by-46} ${bx+30},${by-46}" fill="${roof}"/>
+        ${windows}
+        <rect x="${bx+bw-20}" y="${by-90}" width="86" height="${bh+90}" fill="${roof}" opacity=".9"/>
+        ${trees}
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
     }
-    let trees='';
-    for (let t=0;t<7;t++){
-      const x = 120 + t*(1360/6) + ((i*29+t*47)%60);
-      const s = 34 + ((i+t)*13)%26;
-      trees += `<rect x="${x-4}" y="${600-s}" width="8" height="${s+30}" fill="#5a4a3a"/><circle cx="${x}" cy="${600-s-8}" r="${s}" fill="${grass}"/>`;
+   
+    /* ---- DOM生成 ---- */
+    const track = document.getElementById('track');
+    const stage = document.getElementById('stage');
+    const count = document.getElementById('count');
+    const fill  = document.getElementById('fill');
+    const n = photos.length;
+    let cur = 0;
+   
+    const zoomIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"/></svg>';
+   
+    const slides = photos.map((p, i) => {
+      const el = document.createElement('div');
+      el.className = 'slide';
+      el.setAttribute('role', 'group');
+      el.setAttribute('aria-roledescription', 'slide');
+      el.setAttribute('aria-label', `${i+1} / ${n}`);
+      const img = document.createElement('img');
+      img.src = p.src || scene(i);
+      img.alt = p.alt;
+      img.draggable = false;
+      img.loading = 'lazy';
+      const zoom = document.createElement('button');
+      zoom.className = 'zoom';
+      zoom.setAttribute('aria-label', '拡大して見る');
+      zoom.innerHTML = zoomIcon;
+      zoom.addEventListener('click', e => { e.stopPropagation(); openLightbox(i); });
+      el.append(img, zoom);
+      el.addEventListener('click', () => {
+        if (dragged) return;
+        if (el.classList.contains('is-side')) go(i);   // 隣の写真をクリックでそこへ移動
+      });
+      track.appendChild(el);
+      return el;
+    });
+   
+    /* ---- 表示更新 ---- */
+    function layout(){
+      slides.forEach((el, i) => {
+        let d = i - cur;
+        if (d >  n/2) d -= n;
+        if (d <= -n/2) d += n;
+        el.style.setProperty('--pos', d);
+        el.classList.toggle('is-active', d === 0);
+        el.classList.toggle('is-side', Math.abs(d) === 1);
+        el.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
+        el.style.zIndex = d === 0 ? 2 : 1;
+        el.querySelector('.zoom').tabIndex = d === 0 ? 0 : -1;
+      });
+      count.textContent = `${cur+1}/${n}`;
+      fill.style.width = ((cur+1)/n*100) + '%';
     }
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
-      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky1}"/><stop offset="1" stop-color="${sky2}"/></linearGradient></defs>
-      <rect width="1600" height="900" fill="url(#g)"/>
-      <circle cx="${1200-i*40}" cy="${170+(i%4)*20}" r="70" fill="#fff" opacity=".75"/>
-      <ellipse cx="320" cy="180" rx="190" ry="48" fill="#fff" opacity=".8"/>
-      <ellipse cx="520" cy="215" rx="150" ry="38" fill="#fff" opacity=".7"/>
-      <ellipse cx="1080" cy="120" rx="170" ry="40" fill="#fff" opacity=".75"/>
-      <polygon points="0,520 220,400 430,520 640,420 900,540 1200,430 1600,560 1600,640 0,640" fill="${roof}" opacity=".35"/>
-      <rect y="590" width="1600" height="310" fill="${grass}"/>
-      <polygon points="0,900 0,780 1600,700 1600,900" fill="#6d7480"/>
-      <polygon points="0,830 1600,745 1600,760 0,846" fill="#f1f1f1" opacity=".8"/>
-      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${wall}"/>
-      <polygon points="${bx-24},${by} ${bx+bw+24},${by} ${bx+bw-30},${by-46} ${bx+30},${by-46}" fill="${roof}"/>
-      ${windows}
-      <rect x="${bx+bw-20}" y="${by-90}" width="86" height="${bh+90}" fill="${roof}" opacity=".9"/>
-      ${trees}
-    </svg>`;
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-  }
- 
-  /* ---- DOM生成 ---- */
-  const track = document.getElementById('track');
-  const stage = document.getElementById('stage');
-  const count = document.getElementById('count');
-  const fill  = document.getElementById('fill');
-  const n = photos.length;
-  let cur = 0;
- 
-  const zoomIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"/></svg>';
- 
-  const slides = photos.map((p, i) => {
-    const el = document.createElement('div');
-    el.className = 'slide';
-    el.setAttribute('role', 'group');
-    el.setAttribute('aria-roledescription', 'slide');
-    el.setAttribute('aria-label', `${i+1} / ${n}`);
-    const img = document.createElement('img');
-    img.src = p.src || scene(i);
-    img.alt = p.alt;
-    img.draggable = false;
-    img.loading = 'lazy';
-    const zoom = document.createElement('button');
-    zoom.className = 'zoom';
-    zoom.setAttribute('aria-label', '拡大して見る');
-    zoom.innerHTML = zoomIcon;
-    zoom.addEventListener('click', e => { e.stopPropagation(); openLightbox(i); });
-    el.append(img, zoom);
-    el.addEventListener('click', () => {
-      if (dragged) return;
-      if (el.classList.contains('is-side')) go(i);   // 隣の写真をクリックでそこへ移動
+    function go(i){ cur = ((i % n) + n) % n; layout(); }
+    const next = () => go(cur + 1);
+    const prev = () => go(cur - 1);
+   
+    document.getElementById('next').addEventListener('click', next);
+    document.getElementById('prev').addEventListener('click', prev);
+    stage.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') { next(); e.preventDefault(); }
+      if (e.key === 'ArrowLeft')  { prev(); e.preventDefault(); }
     });
-    track.appendChild(el);
-    return el;
-  });
- 
-  /* ---- 表示更新 ---- */
-  function layout(){
-    slides.forEach((el, i) => {
-      let d = i - cur;
-      if (d >  n/2) d -= n;
-      if (d <= -n/2) d += n;
-      el.style.setProperty('--pos', d);
-      el.classList.toggle('is-active', d === 0);
-      el.classList.toggle('is-side', Math.abs(d) === 1);
-      el.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
-      el.style.zIndex = d === 0 ? 2 : 1;
-      el.querySelector('.zoom').tabIndex = d === 0 ? 0 : -1;
+   
+    /* ---- ドラッグ / スワイプ ---- */
+    let startX = null, dragged = false;
+    stage.addEventListener('pointerdown', e => {
+      if (e.target.closest('button')) return;
+      startX = e.clientX; dragged = false;
     });
-    count.textContent = `${cur+1}/${n}`;
-    fill.style.width = ((cur+1)/n*100) + '%';
-  }
-  function go(i){ cur = ((i % n) + n) % n; layout(); }
-  const next = () => go(cur + 1);
-  const prev = () => go(cur - 1);
- 
-  document.getElementById('next').addEventListener('click', next);
-  document.getElementById('prev').addEventListener('click', prev);
-  stage.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') { next(); e.preventDefault(); }
-    if (e.key === 'ArrowLeft')  { prev(); e.preventDefault(); }
-  });
- 
-  /* ---- ドラッグ / スワイプ ---- */
-  let startX = null, dragged = false;
-  stage.addEventListener('pointerdown', e => {
-    if (e.target.closest('button')) return;
-    startX = e.clientX; dragged = false;
-  });
-  window.addEventListener('pointermove', e => {
-    if (startX !== null && Math.abs(e.clientX - startX) > 8) dragged = true;
-  });
-  window.addEventListener('pointerup', e => {
-    if (startX === null) return;
-    const dx = e.clientX - startX;
-    if (Math.abs(dx) > 50) (dx < 0 ? next : prev)();
-    startX = null;
-    setTimeout(() => dragged = false, 0);
-  });
- 
-  /* ---- ライトボックス ---- */
-  const lb = document.getElementById('lightbox');
-  const lbImg = document.getElementById('lbImg');
-  function openLightbox(i){
-    lbImg.src = slides[i].querySelector('img').src;
-    lbImg.alt = photos[i].alt;
-    lb.showModal();
-  }
-  document.getElementById('close').addEventListener('click', () => lb.close());
-  lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
- 
-  layout();
+    window.addEventListener('pointermove', e => {
+      if (startX !== null && Math.abs(e.clientX - startX) > 8) dragged = true;
+    });
+    window.addEventListener('pointerup', e => {
+      if (startX === null) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 50) (dx < 0 ? next : prev)();
+      startX = null;
+      setTimeout(() => dragged = false, 0);
+    });
+   
+    /* ---- ライトボックス ---- */
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lbImg');
+    function openLightbox(i){
+      lbImg.src = slides[i].querySelector('img').src;
+      lbImg.alt = photos[i].alt;
+      lb.showModal();
+    }
+    document.getElementById('close').addEventListener('click', () => lb.close());
+    lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
+   
+    layout();
   })();
 </script>
 </body>
