@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ribbons – edge to edge</title>
+<title>Setouchi Mirai Kaigi</title>
 <style>
   :root{
     --bg:#ede8e4; --navy:#2f3a6b;
@@ -17,7 +17,6 @@
   /* 画面の左右にはみ出した端で横スクロールが出ないようにする(縦方向には影響しない) */
   .page{overflow-x:clip}
 
-  /* ★ポイント1: section は overflow を隠さない */
   .hero{position:relative;min-height:100vh;overflow:visible}
 
   /* ★ポイント2: svg は section の高さに収めず、はみ出しを表示する(overflow:visible) */
@@ -33,34 +32,122 @@
   .r-yellow{stroke:var(--yellow);stroke-width:40;opacity:.85}
   .r-mint{stroke:var(--mint);stroke-width:38;opacity:.8}
   .r-teal{stroke:var(--teal);stroke-width:38;opacity:.95}
-  .r-white{stroke:#fff;stroke-width:46;opacity:.7;filter:blur(3px)}
-  .ribbons g{animation:drift 14s ease-in-out infinite alternate}
-  .ribbons g:nth-child(2){animation-duration:18s;animation-direction:alternate-reverse}
-  .ribbons g:nth-child(3){animation-duration:16s}
-  .ribbons g:nth-child(4){animation-duration:20s;animation-direction:alternate-reverse}
-  .ribbons g:nth-child(5){animation-duration:12s}
-  @keyframes drift{
-    from{transform:translate(-14px,6px) rotate(-.4deg)}
-    to  {transform:translate(16px,-10px) rotate(.5deg)}
+  .ribbons{stroke:#fff;stroke-width:46;opacity:.7;filter:blur(3px)}
+  .ribbons path.draw{
+    stroke-dasharray:1;
+    stroke-dashoffset:1;
+    animation:draw 2.8s cubic-bezier(.65,0,.35,1) forwards;
   }
-  @media (prefers-reduced-motion:reduce){.ribbons g{animation:none}}
+  @keyframes draw{to{stroke-dashoffset:0}}
+
+  .nav{
+    position:absolute;left:24px;right:24px;top:20px;z-index:6;
+    height:116px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 48px;
+    border-radius:36px 36px 0 0;
+    backdrop-filter:blur(12px);
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    font-size:28px;font-weight:800;letter-spacing:.02em;
+    color:var(--navy);text-decoration:none;text-transform:uppercase;
+  }
+  .brand svg{width:34px;height:34px}
+  .menu{
+    display:flex;align-items:center;gap:60px;list-style:none;
+  }
+  .menu a{
+    position:relative;
+    font-size:21px;font-weight:600;
+    color:var(--navy);text-decoration:none;
+    padding:6px 0;
+  }
+  .menu a.active::before{
+    content:"";position:absolute;left:-26px;right:-26px;top:50%;
+    height:20px;transform:translateY(-35%);
+    background:radial-gradient(ellipse at center,rgba(130,140,220,.35),transparent 70%);
+    z-index:-1;
+  }
+  .menu a::after{
+    content:"";position:absolute;left:0;bottom:-2px;height:2px;width:0;
+    background:var(--navy);transition:width .25s;
+  }
+  .menu a:hover::after{width:100%}
+  .lang{
+    background:none;border:0;cursor:pointer;color:var(--navy);
+    display:grid;place-items:center;margin-left:-20px;
+  }
+  .lang svg{width:34px;height:34px}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1100px){
+    .menu{gap:28px}
+    .menu a{font-size:17px}
+    .brand{font-size:22px}
+  }
+  @media (max-width:760px){
+    .nav{height:auto;padding:16px 20px;flex-direction:column;gap:12px;left:12px;right:12px;border-radius:28px 28px 0 0}
+    .menu{flex-wrap:wrap;justify-content:center;gap:10px 22px}
+    .menu a{font-size:15px}
+    .lang{display:none}
+    .motion{top:12px;right:12px;font-size:15px;padding:10px 14px}
+    .scroll{display:none}
+    .headline{top:22vh}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .ribbons g,.scroll::before{animation:none}
+  }
 
   .headline{
-    position:absolute;z-index:1;
-    left:clamp(24px,6.2vw,120px);top:clamp(240px,31vh,340px);
+    position:absolute; z-index:1;
+    left:clamp(24px,6.2vw,120px);top:clamp(200px,60vh,340px);
     font-size:clamp(56px,7.6vw,110px);line-height:1.12;font-weight:700;
   }
   .headline span{display:block}
   .headline span:nth-child(2){padding-left:.9em}
 
   /* ★ポイント3: 次以降の section は svg より手前に置き、背景は透明にする */
-  .sec{
-    position:relative;z-index:1;
+  .project{
+    position:relative; z-index:1;
+    min-height:80vh;
+    padding:120px clamp(24px,6.2vw,120px);
+    display:flex; align-items:center;
+    margin: 200px 0 0 0;
+    gap: 1px;
+    gap: 400px;
+  }
+  .project .panel{
+    flex: 1;
+    max-width:560px;padding:40px 44px;border-radius:28px;
+    background:rgba(251,249,247,.7);backdrop-filter:blur(10px);
+  }
+  .project img {
+    max-width: 100%;
+    width: 50%;
+    height: 50%;
+    box-shadow: 4px 4px 6px;
+  }
+
+  .introduction {
+    position:relative; z-index:1;
     min-height:80vh;
     padding:120px clamp(24px,6.2vw,120px);
     display:flex;align-items:center;
-  }
+    margin: 200px 0 0 0;
   .sec.right{justify-content:flex-end}
+  }
+
+  .sec {
+    position:relative; z-index:1;
+    min-height:80vh;
+    padding:120px clamp(24px,6.2vw,120px);
+    display:flex;align-items:center;
+    margin: 200px 0 0 0;
+  .sec.right{justify-content:flex-end}
+  }
+  .sec.right {justify-content:flex-end}
+
   .panel{
     max-width:560px;padding:40px 44px;border-radius:28px;
     background:rgba(251,249,247,.7);backdrop-filter:blur(10px);
@@ -74,12 +161,6 @@
 
   <section class="hero">
     <svg class="ribbons" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <!-- 白い帯 -->
-      <g>
-        <path class="r-white" d="M-60 400 C150 380 330 400 640 385 C900 400 1100 440 1400 410"/>
-        <path class="r-white" d="M200 560 C500 520 800 540 1100 580 C1250 600 1400 590 1480 575"/>
-        <path class="r-white" d="M1230 475 C1450 460 1600 500 1900 465"/>
-      </g>
       <!-- 黄色: 右端まで -->
       <g>
         <path class="r-yellow" d="M1220 -10 C900 60 600 180 460 360 C380 470 400 600 470 710 C560 850 750 920 900 970
@@ -102,14 +183,50 @@
       </g>
     </svg>
 
-    <h1 class="headline"><span>Weaving</span><span>Tomorrow</span></h1>
+    <header class="nav">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+        <rect x="5" y="5" width="30" height="30" rx="6"/>
+        <path d="M5 14c10 0 10 12 20 12s10-8 10-8M5 26c10 0 10-12 20-12"/>
+      </svg>
+      Setouchi Mirai 
+    </a>
+    <nav aria-label="メインメニュー">
+      <ul class="menu">
+        <li><a class="active" href="#">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">People</a></li>
+        <li><a href="#">Co-Creation</a></li>
+        <li><a href="#">News</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="lang" aria-label="言語を切り替え">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="16" cy="16" r="13"/>
+        <ellipse cx="16" cy="16" rx="6" ry="13"/>
+        <path d="M3 16h26M5 9h22M5 23h22"/>
+      </svg>
+    </button>
+  </header>
+
+    <h1 class="headline"><span>From City to </span><span>Region</span></h1>
   </section>
 
-  <section class="sec">
+  <section class="introduction">
     <div class="panel">
-      <h2>Next section</h2>
-      <p>リボンは上のsectionの境界で途切れず、この領域の背面を通って左右どちらかの画面端まで続きます。</p>
+        <h2>About Us</h2>
+        <p>We are</p>
     </div>
+  </section>
+  <section class="project">
+    <div class="panel">
+      <h2>Project</h2>
+      <p>We are doing Regional Revitalization</p>
+      <button id="all_project">From Here</button>
+    </div>
+    <img src="./images/project.jpg" alt="photo">
+    
   </section>
 
   <section class="sec right">
@@ -120,5 +237,13 @@
   </section>
 
 </div>
+<script>
+  const hero = document.getElementById('hero');
+  const btn = document.getElementById('motionBtn');
+  btn.addEventListener('click', () => {
+    const paused = hero.classList.toggle('paused');
+    btn.setAttribute('aria-pressed', String(paused));
+  });
+</script>
 </body>
 </html>
