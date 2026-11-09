@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weave City – Weaving Tomorrow</title>
+<style>
+  :root{
+    --bg:#ede8e4;
+    --navy:#2f3a6b;
+    --orange:#e2622b;
+    --yellow:#f5d983;
+    --mint:#86d3b6;
+    --teal:#46737a;
+    --white:#fbf9f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Helvetica Neue","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--navy);
+    overflow-x:hidden;
+    line-height:1.7;
+  }
+  body.can-grab,
+  body.can-grab *:not(a):not(button){cursor:grab}
+  body.dragging,
+  body.dragging *{cursor:grabbing !important;user-select:none}
+
+  /* ---------- リボン(画面に固定したcanvas。スクロール量に合わせて描画) ---------- */
+  #ribbons{
+    position:fixed;inset:0;
+    width:100%;height:100%;
+    z-index:0;
+    pointer-events:none;
+  }
+  .page{position:relative;z-index:1}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    min-height:100vh;
+  }
+  .headline{
+    position:absolute;
+    left:clamp(24px,6.2vw,120px);
+    top:clamp(280px,31vh,340px);
+    font-size:clamp(56px,7.6vw,110px);
+    line-height:1.12;
+    font-weight:700;
+    letter-spacing:.01em;
+    pointer-events:none;
+    user-select:none;
+  }
+  .headline span{display:block}
+  .headline span:nth-child(2){padding-left:.9em}
+
+  /* ---------- Motion button ---------- */
+  .motion{
+    position:fixed;top:24px;right:36px;z-index:20;
+    display:flex;align-items:center;gap:12px;
+    padding:12px 18px;
+    font-weight:500;font-size:18px;line-height:1;font-family:inherit;
+    color:var(--navy);
+    background:rgba(255,255,255,.75);
+    border:1px solid #b9bfe6;
+    border-radius:12px;
+    cursor:pointer;
+    backdrop-filter:blur(6px);
+    transition:background .2s;
+  }
+  .motion:hover{background:#fff}
+  .motion:focus-visible{outline:3px solid #7b86d8;outline-offset:2px}
+  .motion .bars{display:flex;gap:4px}
+  .motion .bars i{width:8px;height:20px;border:1.5px solid var(--navy);border-radius:3px}
+  .paused .motion .bars i:first-child{
+    width:0;height:0;border-radius:0;border-width:0;
+    border-left:16px solid var(--navy);
+    border-top:10px solid transparent;border-bottom:10px solid transparent;
+  }
+  .paused .motion .bars i:last-child{display:none}
+
+  /* ---------- Scroll indicator ---------- */
+  .scroll{
+    position:absolute;right:96px;bottom:200px;
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    font-weight:600;font-size:20px;
+    transform:translateX(24px);
+    pointer-events:none;
+  }
+  .scroll::before{
+    content:"";width:2px;height:60px;background:var(--navy);
+    transform-origin:top;
+    animation:line 2s ease-in-out infinite;
+  }
+  .paused .scroll::before{animation-play-state:paused}
+  @keyframes line{
+    0%{transform:scaleY(0)}
+    60%{transform:scaleY(1)}
+    100%{transform:scaleY(1);opacity:0}
+  }
+
+  /* ---------- Bottom nav pill(画面下に固定) ---------- */
+  .nav{
+    position:fixed;left:24px;right:24px;bottom:-1px;z-index:10;
+    height:116px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 48px;
+    background:rgba(251,249,247,.94);
+    border-radius:36px 36px 0 0;
+    backdrop-filter:blur(12px);
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    font-size:28px;font-weight:800;letter-spacing:.02em;
+    color:var(--navy);text-decoration:none;text-transform:uppercase;
+  }
+  .brand svg{width:34px;height:34px}
+  .menu{display:flex;align-items:center;gap:60px;list-style:none}
+  .menu a{
+    position:relative;
+    font-size:21px;font-weight:600;
+    color:var(--navy);text-decoration:none;
+    padding:6px 0;
+  }
+  .menu a.active::before{
+    content:"";position:absolute;left:-26px;right:-26px;top:50%;
+    height:20px;transform:translateY(-35%);
+    background:radial-gradient(ellipse at center,rgba(130,140,220,.35),transparent 70%);
+    z-index:-1;
+  }
+  .menu a::after{
+    content:"";position:absolute;left:0;bottom:-2px;height:2px;width:0;
+    background:var(--navy);transition:width .25s;
+  }
+  .menu a:hover::after{width:100%}
+  .lang{
+    background:none;border:0;cursor:pointer;color:var(--navy);
+    display:grid;place-items:center;margin-left:-20px;
+  }
+  .lang svg{width:34px;height:34px}
+
+  /* ---------- Sections ---------- */
+  .sec{
+    position:relative;
+    min-height:90vh;
+    padding:120px clamp(24px,6.2vw,120px);
+    display:flex;align-items:center;
+  }
+  .sec.right{justify-content:flex-end}
+  .panel{
+    max-width:620px;
+    padding:44px 48px;
+    background:rgba(251,249,247,.62);
+    backdrop-filter:blur(10px);
+    border-radius:32px;
+  }
+  .eyebrow{
+    font-size:15px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--orange);margin-bottom:14px;
+  }
+  .sec h2{
+    font-size:clamp(36px,4.4vw,64px);
+    line-height:1.15;margin-bottom:22px;
+  }
+  .sec p{font-size:18px;margin-bottom:14px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:28px}
+  .card{
+    padding:22px;border-radius:22px;
+    background:rgba(255,255,255,.7);
+  }
+  .card b{display:block;font-size:19px;margin-bottom:6px}
+  .card span{font-size:15px;opacity:.85}
+  .news{list-style:none;margin-top:18px}
+  .news li{
+    display:flex;gap:22px;padding:16px 0;
+    border-top:1px solid rgba(47,58,107,.2);
+    font-size:17px;
+  }
+  .news time{font-weight:700;min-width:96px;color:var(--teal)}
+  .btn{
+    display:inline-block;margin-top:10px;
+    padding:14px 30px;border-radius:999px;
+    background:var(--navy);color:#fff;text-decoration:none;font-weight:600;
+    transition:transform .2s;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  footer{
+    padding:80px clamp(24px,6.2vw,120px) 200px;
+    font-size:14px;opacity:.8;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1100px){
+    .menu{gap:28px}
+    .menu a{font-size:17px}
+    .brand{font-size:22px}
+  }
+  @media (max-width:900px){
+    .cards{grid-template-columns:1fr}
+  }
+  @media (max-width:760px){
+    .nav{height:auto;padding:16px 20px;flex-direction:column;gap:12px;left:12px;right:12px;border-radius:28px 28px 0 0}
+    .menu{flex-wrap:wrap;justify-content:center;gap:10px 22px}
+    .menu a{font-size:15px}
+    .lang{display:none}
+    .motion{top:12px;right:12px;font-size:15px;padding:10px 14px}
+    .scroll{display:none}
+    .headline{top:22vh}
+    .panel{padding:28px 24px}
+    footer{padding-bottom:240px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .scroll::before{animation:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body id="top">
+
+<canvas id="ribbons" aria-hidden="true"></canvas>
+
+<button class="motion" id="motionBtn" aria-pressed="false" aria-label="アニメーションの再生・停止">
+  Motion <span class="bars"><i></i><i></i></span>
+</button>
+
+<main class="page" id="page">
+
+  <section class="hero" id="home" data-nav="home">
+    <h1 class="headline">
+      <span>Weaving</span>
+      <span>Tomorrow</span>
+    </h1>
+    <div class="scroll" aria-hidden="true">Scroll</div>
+  </section>
+
+  <section class="sec" id="about" data-nav="about">
+    <div class="panel">
+      <p class="eyebrow">About</p>
+      <h2>A city woven from many threads</h2>
+      <p>Weave City is a fictional living lab where people, ideas and technologies are interlaced rather than stacked. Every path crosses another, and every crossing is a chance to try something new.</p>
+      <p>Try dragging the ribbons in the background — they push back.</p>
+    </div>
+  </section>
+
+  <section class="sec right" id="people" data-nav="people">
+    <div class="panel">
+      <p class="eyebrow">People</p>
+      <h2>People of Weave City</h2>
+      <p>Residents, researchers and neighbors shape the city together, from the first sketch to the daily routines that make a place feel like home.</p>
+      <div class="cards">
+        <div class="card"><b>Residents</b><span>Living and testing ideas every day.</span></div>
+        <div class="card"><b>Researchers</b><span>Turning curiosity into prototypes.</span></div>
+        <div class="card"><b>Neighbors</b><span>Joining workshops and open days.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="co-creation" data-nav="co-creation">
+    <div class="panel">
+      <p class="eyebrow">Co-Creation</p>
+      <h2>Build it together</h2>
+      <p>Partners from many fields bring their own threads. We provide the loom: shared spaces, open data and room to make mistakes safely.</p>
+      <a class="btn" href="#contact">Become a partner</a>
+    </div>
+  </section>
+
+  <section class="sec right" id="news" data-nav="news">
+    <div class="panel">
+      <p class="eyebrow">News</p>
+      <h2>Latest updates</h2>
+      <ul class="news">
+        <li><time>2026.11.01</time><span>Autumn open day announced for neighbors and visitors.</span></li>
+        <li><time>2026.10.18</time><span>New co-creation studio opens on the east side.</span></li>
+        <li><time>2026.10.02</time><span>Call for partners: mobility and daily-life projects.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" id="contact" data-nav="contact">
+    <div class="panel">
+      <p class="eyebrow">Contact</p>
+      <h2>Let's talk</h2>
+      <p>Have an idea, a question, or a thread you'd like to add? We'd love to hear from you.</p>
+      <a class="btn" href="mailto:hello@example.com">hello@example.com</a>
+    </div>
+  </section>
+
+  <footer>© 2026 Weave City (fictional demo). All rights reserved.</footer>
+</main>
+
+<!-- ナビゲーション -->
+<header class="nav">
+  <a class="brand" href="#top">
+    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+      <rect x="5" y="5" width="30" height="30" rx="6"/>
+      <path d="M5 14c10 0 10 12 20 12s10-8 10-8M5 26c10 0 10-12 20-12"/>
+    </svg>
+    Weave City
+  </a>
+  <nav aria-label="メインメニュー">
+    <ul class="menu">
+      <li><a class="active" data-link="home" href="#top">Home</a></li>
+      <li><a data-link="about" href="#about">About</a></li>
+      <li><a data-link="people" href="#people">People</a></li>
+      <li><a data-link="co-creation" href="#co-creation">Co-Creation</a></li>
+      <li><a data-link="news" href="#news">News</a></li>
+      <li><a data-link="contact" href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+  <button class="lang" aria-label="言語を切り替え">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+      <circle cx="16" cy="16" r="13"/>
+      <ellipse cx="16" cy="16" rx="6" ry="13"/>
+      <path d="M3 16h26M5 9h22M5 23h22"/>
+    </svg>
+  </button>
+</header>
+
+<script>
+(() => {
+  /* =====================================================
+     リボン物理演算(スクロール対応版)
+     - 各リボンを「点の列(弾性のあるヒモ)」として扱う
+     - リボンはページの一番下の、画面外に出るまで伸びる
+     - canvasは画面に固定し、scrollY の分だけずらして描画する
+     - 元の形に戻るバネ + 隣の点との連動 + 別リボンとの衝突
+     ===================================================== */
+  const W = 1920, H = 1080;                 // 設計上の座標系(幅1920基準)
+  const body   = document.body;
+  const canvas = document.getElementById('ribbons');
+  const ctx    = canvas.getContext('2d');
+  const btn    = document.getElementById('motionBtn');
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let ambient = !reduceMotion;
+
+  // ---- 調整パラメータ ----
+  const DAMP   = 0.975;   // 速度の減衰(小さいほどすぐ止まる)
+  const SPRING = 0.006;   // 元の位置へ戻る強さ
+  const COUPLE = 0.22;    // 隣の点との連動(大きいほどなめらか・硬い)
+  const BOUNCE = 0.9;     // 衝突時の押し返しの強さ
+  const MAXV   = 40;      // 速度の上限
+  const SPACING = 24;     // 点の間隔(world px)
+  const EXT_DY  = 720;    // 下方向へ伸ばす1区間の高さ
+
+  // ---- リボン定義(cubic bezier)。solid=true は掴めて衝突する ----
+  const baseDefs = [
+    // 白い帯(装飾。衝突しない)
+    { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+      start:[-60,400],  segs:[[150,380,330,400,640,385],[900,400,1100,440,1400,410]] },
+    { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+      start:[200,560],  segs:[[500,520,800,540,1100,580],[1250,600,1400,590,1480,575]] },
+    { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+      start:[1230,475], segs:[[1450,460,1600,500,1900,465]] },
+    // 色付きリボン(ページ下端まで延長される)
+    { color:'rgba(245,217,131,.85)', w:40, solid:true, amp:12, ph:0.4,
+      start:[1220,-10], segs:[[900,60,600,180,460,360],[380,470,400,600,470,710],[560,850,750,920,900,970]] },
+    { color:'rgba(134,211,182,.82)', w:38, solid:true, amp:12, ph:2.2,
+      start:[830,-20],  segs:[[980,70,1120,190,1145,380],[1165,560,1080,720,900,900],[860,940,830,960,800,985]] },
+    { color:'#e2622b', w:42, solid:true, amp:12, ph:4.0,
+      start:[-40,62],   segs:[[300,40,650,70,1000,130],[1300,190,1520,330,1620,450],[1710,560,1680,760,1640,900],[1620,970,1590,1010,1570,1040]] },
+    { color:'rgba(70,115,122,.96)', w:38, solid:true, amp:12, ph:5.6,
+      start:[1715,-10], segs:[[1715,150,1680,330,1560,500],[1480,610,1420,650,1300,700],[1150,760,1000,800,880,910],[850,940,820,970,790,1000]] },
+  ];
+
+  // ---- ベジェ → 点列 ----
+  function flatten(start, segs){
+    const pts = [start.slice()];
+    let [x0,y0] = start;
+    for (const [x1,y1,x2,y2,x3,y3] of segs){
+      for (let i=1;i<=60;i++){
+        const t=i/60, u=1-t;
+        pts.push([
+          u*u*u*x0 + 3*u*u*t*x1 + 3*u*t*t*x2 + t*t*t*x3,
+          u*u*u*y0 + 3*u*u*t*y1 + 3*u*t*t*y2 + t*t*t*y3
+        ]);
+      }
+      x0=x3; y0=y3;
+    }
+    return pts;
+  }
+  function resample(poly, spacing){
+    const len=[0];
+    for (let i=1;i<poly.length;i++){
+      len.push(len[i-1] + Math.hypot(poly[i][0]-poly[i-1][0], poly[i][1]-poly[i-1][1]));
+    }
+    const total=len[len.length-1];
+    const n=Math.max(8, Math.round(total/spacing));
+    const out=[]; let j=1;
+    for (let k=0;k<=n;k++){
+      const target=total*k/n;
+      while (j<len.length-1 && len[j]<target) j++;
+      const seg=len[j]-len[j-1] || 1;
+      const f=(target-len[j-1])/seg;
+      out.push([
+        poly[j-1][0]+(poly[j][0]-poly[j-1][0])*f,
+        poly[j-1][1]+(poly[j][1]-poly[j-1][1])*f
+      ]);
+    }
+    return out;
+  }
+
+  // 元の終点から、画面外(bottom)に出るまで、なめらかにS字で延長する
+  function extend(d, bottom){
+    const segs = d.segs.slice();
+    const last = segs[segs.length-1];
+    let P0 = [last[4], last[5]];
+    let T  = [last[4]-last[2], last[5]-last[3]];
+    let tl = Math.hypot(T[0],T[1]) || 1;
+    T = [T[0]/tl, T[1]/tl];
+    if (T[1] < 0.4){ T[1]=0.4; tl=Math.hypot(T[0],T[1]); T=[T[0]/tl,T[1]/tl]; }
+    let k=0;
+    while (P0[1] < bottom){
+      k++;
+      const L  = EXT_DY*0.4;
+      const xt = W*(0.5 + 0.42*Math.sin(k*1.25 + d.ph));
+      const P3 = [xt, P0[1]+EXT_DY];
+      segs.push([P0[0]+T[0]*L, P0[1]+T[1]*L, xt, P3[1]-L, P3[0], P3[1]]);
+      P0 = P3; T = [0,1];
+    }
+    return segs;
+  }
+
+  // ---- リボン生成(ページの高さに合わせて作る) ----
+  let ribbons=[], solids=[], pairs=[], builtBottom=0;
+
+  function makePoints(d, segs, ri){
+    const pts = resample(flatten(d.start, segs), SPACING).map((p,i,arr)=>({
+      x:p[0], y:p[1], px:p[0], py:p[1],
+      bx:p[0], by:p[1],
+      rx:p[0], ry:p[1],
+      pin: i===0 || i===arr.length-1,
+      s: i/(arr.length-1)
+    }));
+    let minY=Infinity, maxY=-Infinity;
+    for (const p of pts){ if(p.by<minY)minY=p.by; if(p.by>maxY)maxY=p.by; }
+    return { ...d, pts, phase: ri*1.7, minY:minY-120, maxY:maxY+120 };
+  }
+
+  function build(bottom){
+    builtBottom = bottom;
+    const list = [];
+    baseDefs.forEach((d,ri)=>{
+      const segs = d.solid ? extend(d, bottom) : d.segs;
+      list.push(makePoints(d, segs, ri));
+    });
+    // 下の方にも白い帯を足す
+    let n=0;
+    for (let y=1550; y<bottom; y+=1050, n++){
+      const d = (n%2===0)
+        ? { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+            start:[-60,y], segs:[[300,y-60,700,y+70,1100,y+10],[1400,y-50,1700,y+50,1980,y-10]] }
+        : { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+            start:[-60,y+100], segs:[[400,y+150,800,y+30,1200,y+90],[1500,y+140,1750,y+60,1980,y+110]] };
+      list.push(makePoints(d, d.segs, 20+n));
+    }
+    ribbons = list;
+    solids  = ribbons.filter(r=>r.solid);
+
+    // 衝突ペアを事前計算(元々交差・近接している箇所は無視)
+    pairs = [];
+    for (let a=0;a<solids.length;a++){
+      for (let b=a+1;b<solids.length;b++){
+        const A=solids[a], B=solids[b], minD=(A.w+B.w)/2;
+        for (const p of A.pts){
+          if (p.pin) continue;
+          for (const q of B.pts){
+            if (q.pin) continue;
+            if (Math.abs(p.by-q.by) > 360) continue;
+            const d=Math.hypot(p.bx-q.bx, p.by-q.by);
+            if (d>minD*1.35 && d<360) pairs.push([p,q,minD]);
+          }
+        }
+      }
+    }
+    grab = null;
+  }
+
+  // ---- 物理ステップ ----
+  let time = 0;
+  let grab = null;                 // {p, ox, oy}
+  const mouse = {cx:0, cy:0};      // ポインタの画面座標
+
+  function step(){
+    if (ambient) time += 1/60;
+
+    for (const r of ribbons){
+      const pts=r.pts;
+      for (const p of pts){
+        const env=Math.sin(Math.PI*p.s);
+        p.rx = p.bx + Math.sin(time*0.6 + p.s*5 + r.phase)*r.amp*env;
+        p.ry = p.by + Math.cos(time*0.5 + p.s*4 + r.phase)*r.amp*0.7*env;
+        if (p.pin){ p.x=p.rx; p.y=p.ry; p.px=p.x; p.py=p.y; continue; }
+
+        let vx=(p.x-p.px)*DAMP, vy=(p.y-p.py)*DAMP;
+        const sp=Math.hypot(vx,vy);
+        if (sp>MAXV){ vx*=MAXV/sp; vy*=MAXV/sp; }
+        p.px=p.x; p.py=p.y;
+        p.x+=vx; p.y+=vy;
+
+        p.x+=(p.rx-p.x)*SPRING;
+        p.y+=(p.ry-p.y)*SPRING;
+      }
+      for (let it=0; it<3; it++){
+        for (let i=1;i<pts.length-1;i++){
+          const p=pts[i], a=pts[i-1], b=pts[i+1];
+          const dx=p.x-p.rx, dy=p.y-p.ry;
+          const ax=((a.x-a.rx)+(b.x-b.rx))/2, ay=((a.y-a.ry)+(b.y-b.ry))/2;
+          p.x+=(ax-dx)*COUPLE;
+          p.y+=(ay-dy)*COUPLE;
+        }
+      }
+    }
+
+    // ドラッグ中の点をポインタへ引っ張る(スクロール中もポインタに追従)
+    if (grab){
+      const w=toWorld(mouse.cx, mouse.cy);
+      const p=grab.p;
+      p.x+=(w.x+grab.ox-p.x)*0.4;
+      p.y+=(w.y+grab.oy-p.y)*0.4;
+    }
+
+    // 別リボン同士の衝突 → 押し返す
+    for (let it=0; it<2; it++){
+      for (const [p,q,minD] of pairs){
+        const dx=p.x-q.x, dy=p.y-q.y;
+        const d2=dx*dx+dy*dy;
+        if (d2>=minD*minD || d2<1e-6) continue;
+        const d=Math.sqrt(d2);
+        const k=(minD-d)/d*0.5*BOUNCE;
+        p.x+=dx*k; p.y+=dy*k;
+        q.x-=dx*k; q.y-=dy*k;
+      }
+    }
+  }
+
+  // ---- 座標系と描画 ----
+  let dpr=1, scale=1, offX=0, cw=0, ch=0;
+  function toWorld(cx, cy){
+    return { x:(cx-offX)/scale, y:(cy+window.scrollY)/scale };
+  }
+  function docBottomWorld(){
+    const docH = Math.max(document.documentElement.scrollHeight, ch);
+    return (docH + 400)/scale;               // ページ下端より十分外まで
+  }
+  function resize(){
+    cw=document.documentElement.clientWidth;
+    ch=window.innerHeight;
+    dpr=Math.min(window.devicePixelRatio||1, 2);
+    canvas.width=Math.round(cw*dpr);
+    canvas.height=Math.round(ch*dpr);
+    scale=Math.max(cw/W, ch/H);              // 最初の画面は従来のcover相当
+    offX=(cw-W*scale)/2;
+    ensureLength();
+  }
+  // ページが伸びたときだけ作り直す(余裕を持たせて頻繁な再生成を避ける)
+  function ensureLength(){
+    const need = docBottomWorld();
+    if (need > builtBottom) build(need + 600);
+  }
+
+  function drawRibbon(r){
+    const pts=r.pts;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i=1;i<pts.length-1;i++){
+      const mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+    ctx.lineWidth=r.w;
+    ctx.strokeStyle=r.color;
+    ctx.lineCap='butt';
+    ctx.lineJoin='round';
+    ctx.filter = r.blur ? `blur(${r.blur*scale*dpr}px)` : 'none';
+    ctx.stroke();
+  }
+  function draw(){
+    const sy=window.scrollY;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.setTransform(dpr*scale,0,0,dpr*scale, dpr*offX, -dpr*sy);
+    const top=sy/scale, bot=(sy+ch)/scale;
+    for (const r of ribbons){
+      if (!r.solid && (r.maxY<top || r.minY>bot)) continue;   // 画面外の白い帯は描かない
+      drawRibbon(r);
+    }
+    ctx.filter='none';
+  }
+
+  // ---- ポインタ操作(ドキュメント全体で受ける。文字の上でも掴める) ----
+  function pick(cx,cy){
+    const w=toWorld(cx,cy);
+    let best=null, bd=Infinity;
+    for (const r of solids){
+      const lim=r.w/2+14;
+      for (const p of r.pts){
+        if (p.pin) continue;
+        if (Math.abs(p.y-w.y)>lim) continue;
+        const d=Math.hypot(p.x-w.x, p.y-w.y);
+        if (d<lim && d<bd){ bd=d; best=p; }
+      }
+    }
+    return best ? {p:best, w} : null;
+  }
+  document.addEventListener('pointerdown', e=>{
+    if (e.button!==0 || e.pointerType==='touch') return;   // タッチはスクロールを優先
+    if (e.target.closest('a,button,input,textarea,select,label')) return;
+    const hit=pick(e.clientX, e.clientY);
+    if (!hit) return;
+    mouse.cx=e.clientX; mouse.cy=e.clientY;
+    grab={p:hit.p, ox:hit.p.x-hit.w.x, oy:hit.p.y-hit.w.y};
+    body.classList.add('dragging');
+    getSelection().removeAllRanges();
+    e.preventDefault();
+  });
+  document.addEventListener('selectstart', e=>{ if (grab) e.preventDefault(); });
+  window.addEventListener('pointermove', e=>{
+    mouse.cx=e.clientX; mouse.cy=e.clientY;
+    if (grab || e.pointerType==='touch') return;
+    const onUi = e.target.closest && e.target.closest('a,button');
+    body.classList.toggle('can-grab', !onUi && !!pick(e.clientX,e.clientY));
+  });
+  const release=()=>{ grab=null; body.classList.remove('dragging'); };
+  window.addEventListener('pointerup', release);
+  window.addEventListener('pointercancel', release);
+  window.addEventListener('blur', release);
+
+  // ---- Motionボタン ----
+  btn.addEventListener('click', ()=>{
+    const paused=body.classList.toggle('paused');
+    ambient=!paused && !reduceMotion;
+    btn.setAttribute('aria-pressed', String(paused));
+  });
+
+  // ---- ナビのハイライトをスクロール位置に合わせる ----
+  const links=[...document.querySelectorAll('[data-link]')];
+  const io=new IntersectionObserver(entries=>{
+    for (const en of entries){
+      if (!en.isIntersecting) continue;
+      const id=en.target.dataset.nav;
+      links.forEach(a=>a.classList.toggle('active', a.dataset.link===id));
+    }
+  },{rootMargin:'-45% 0px -45% 0px'});
+  document.querySelectorAll('[data-nav]').forEach(s=>io.observe(s));
+
+  // ---- メインループ(60Hz固定ステップ) ----
+  let last=performance.now(), acc=0;
+  function loop(now){
+    acc+=Math.min(now-last, 100); last=now;
+    while (acc>=1000/60){ step(); acc-=1000/60; }
+    draw();
+    requestAnimationFrame(loop);
+  }
+  addEventListener('resize', resize);
+  addEventListener('load', resize);                 // フォント・画像読み込み後の高さで再確認
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
