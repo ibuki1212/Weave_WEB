@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ribbons – edge to edge</title>
+<style>
+  :root{
+    --bg:#ede8e4; --navy:#2f3a6b;
+    --orange:#e2622b; --yellow:#f5d983; --mint:#86d3b6; --teal:#46737a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Helvetica Neue","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    background:var(--bg);color:var(--navy);line-height:1.7;
+  }
+  /* 画面の左右にはみ出した端で横スクロールが出ないようにする(縦方向には影響しない) */
+  .page{overflow-x:clip}
+
+  /* ★ポイント1: section は overflow を隠さない */
+  .hero{position:relative;min-height:100vh;overflow:visible}
+
+  /* ★ポイント2: svg は section の高さに収めず、はみ出しを表示する(overflow:visible) */
+  .ribbons{
+    position:absolute;left:0;top:0;
+    width:100%;height:100%;
+    overflow:visible;
+    z-index:0;
+    pointer-events:none;
+  }
+  .ribbons path{fill:none;stroke-linecap:butt;stroke-linejoin:round}
+  .r-orange{stroke:var(--orange);stroke-width:42}
+  .r-yellow{stroke:var(--yellow);stroke-width:40;opacity:.85}
+  .r-mint{stroke:var(--mint);stroke-width:38;opacity:.8}
+  .r-teal{stroke:var(--teal);stroke-width:38;opacity:.95}
+  .r-white{stroke:#fff;stroke-width:46;opacity:.7;filter:blur(3px)}
+  .ribbons g{animation:drift 14s ease-in-out infinite alternate}
+  .ribbons g:nth-child(2){animation-duration:18s;animation-direction:alternate-reverse}
+  .ribbons g:nth-child(3){animation-duration:16s}
+  .ribbons g:nth-child(4){animation-duration:20s;animation-direction:alternate-reverse}
+  .ribbons g:nth-child(5){animation-duration:12s}
+  @keyframes drift{
+    from{transform:translate(-14px,6px) rotate(-.4deg)}
+    to  {transform:translate(16px,-10px) rotate(.5deg)}
+  }
+  @media (prefers-reduced-motion:reduce){.ribbons g{animation:none}}
+
+  .headline{
+    position:absolute;z-index:1;
+    left:clamp(24px,6.2vw,120px);top:clamp(240px,31vh,340px);
+    font-size:clamp(56px,7.6vw,110px);line-height:1.12;font-weight:700;
+  }
+  .headline span{display:block}
+  .headline span:nth-child(2){padding-left:.9em}
+
+  /* ★ポイント3: 次以降の section は svg より手前に置き、背景は透明にする */
+  .sec{
+    position:relative;z-index:1;
+    min-height:80vh;
+    padding:120px clamp(24px,6.2vw,120px);
+    display:flex;align-items:center;
+  }
+  .sec.right{justify-content:flex-end}
+  .panel{
+    max-width:560px;padding:40px 44px;border-radius:28px;
+    background:rgba(251,249,247,.7);backdrop-filter:blur(10px);
+  }
+  .panel h2{font-size:clamp(32px,4vw,56px);line-height:1.15;margin-bottom:16px}
+  .panel p{font-size:18px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <section class="hero">
+    <svg class="ribbons" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <!-- 白い帯 -->
+      <g>
+        <path class="r-white" d="M-60 400 C150 380 330 400 640 385 C900 400 1100 440 1400 410"/>
+        <path class="r-white" d="M200 560 C500 520 800 540 1100 580 C1250 600 1400 590 1480 575"/>
+        <path class="r-white" d="M1230 475 C1450 460 1600 500 1900 465"/>
+      </g>
+      <!-- 黄色: 右端まで -->
+      <g>
+        <path class="r-yellow" d="M1220 -10 C900 60 600 180 460 360 C380 470 400 600 470 710 C560 850 750 920 900 970
+                                  C1050 1020 1250 1120 1450 1200 C1650 1280 1800 1260 2000 1170"/>
+      </g>
+      <!-- ミント: 左端まで -->
+      <g>
+        <path class="r-mint" d="M830 -20 C980 70 1120 190 1145 380 C1165 560 1080 720 900 900 C860 940 830 960 800 985
+                                C770 1010 620 1110 450 1150 C300 1190 120 1160 -80 1090"/>
+      </g>
+      <!-- オレンジ: 右端まで -->
+      <g>
+        <path class="r-orange" d="M-40 62 C300 40 650 70 1000 130 C1300 190 1520 330 1620 450 C1710 560 1680 760 1640 900 C1620 970 1590 1010 1570 1040
+                                  C1550 1070 1550 1160 1660 1200 C1760 1240 1880 1220 2000 1150"/>
+      </g>
+      <!-- ティール: 左端まで -->
+      <g>
+        <path class="r-teal" d="M1715 -10 C1715 150 1680 330 1560 500 C1480 610 1420 650 1300 700 C1150 760 1000 800 880 910 C850 940 820 970 790 1000
+                                C760 1030 650 1180 480 1260 C330 1330 120 1300 -80 1250"/>
+      </g>
+    </svg>
+
+    <h1 class="headline"><span>Weaving</span><span>Tomorrow</span></h1>
+  </section>
+
+  <section class="sec">
+    <div class="panel">
+      <h2>Next section</h2>
+      <p>リボンは上のsectionの境界で途切れず、この領域の背面を通って左右どちらかの画面端まで続きます。</p>
+    </div>
+  </section>
+
+  <section class="sec right">
+    <div class="panel">
+      <h2>Another section</h2>
+      <p>sectionの外に出ても、SVGの線はクリップされません。</p>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
