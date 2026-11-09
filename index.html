@@ -209,6 +209,272 @@
 
   }
 </style>
+<script>
+  <script>
+(() => {
+  /* =====================================================
+     リボン物理演算
+     - 各リボンを「点の列(弾性のあるヒモ)」として扱う
+     - 元の形に戻ろうとするバネ + 隣の点との連動
+     - 別のリボンの点同士が重なると押し返す(跳ね返り)
+     - ドラッグで掴んで動かせる。離すと勢いが残る
+     ===================================================== */
+  const W = 1920, H = 1080;                 // 設計上の座標系
+  const hero   = document.getElementById('hero');
+  const canvas = document.getElementById('ribbons');
+  const ctx    = canvas.getContext('2d');
+  const btn    = document.getElementById('motionBtn');
+ 
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let ambient = !reduceMotion;               // ゆらゆら動きのON/OFF(Motionボタン)
+ 
+  // ---- 調整パラメータ ----
+  const DAMP   = 0.975;   // 速度の減衰(小さいほどすぐ止まる)
+  const SPRING = 0.006;   // 元の位置へ戻る強さ
+  const COUPLE = 0.22;    // 隣の点との連動(大きいほどなめらか・硬い)
+  const BOUNCE = 0.9;     // 衝突時の押し返しの強さ
+  const MAXV   = 40;      // 速度の上限
+ 
+  // ---- リボン定義(cubic bezier) ----
+  const defs = [
+    // 白い帯(装飾。衝突しない)
+    { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+      start:[-60,400],  segs:[[150,380,330,400,640,385],[900,400,1100,440,1400,410]] },
+    { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+      start:[200,560],  segs:[[500,520,800,540,1100,580],[1250,600,1400,590,1480,575]] },
+    { color:'rgba(255,255,255,.7)', w:46, blur:3, solid:false, amp:18,
+      start:[1230,475], segs:[[1450,460,1600,500,1900,465]] },
+    // 色付きリボン(ドラッグ・衝突する)
+    { color:'rgba(245,217,131,.85)', w:40, solid:true, amp:12,
+      start:[1220,-10], segs:[[900,60,600,180,460,360],[380,470,400,600,470,710],[560,850,750,920,900,970]] },
+    { color:'rgba(134,211,182,.82)', w:38, solid:true, amp:12,
+      start:[830,-20],  segs:[[980,70,1120,190,1145,380],[1165,560,1080,720,900,900],[860,940,830,960,800,985]] },
+    { color:'#e2622b', w:42, solid:true, amp:12,
+      start:[-40,62],   segs:[[300,40,650,70,1000,130],[1300,190,1520,330,1620,450],[1710,560,1680,760,1640,900],[1620,970,1590,1010,1570,1040]] },
+    { color:'rgba(70,115,122,.96)', w:38, solid:true, amp:12,
+      start:[1715,-10], segs:[[1715,150,1680,330,1560,500],[1480,610,1420,650,1300,700],[1150,760,1000,800,880,910],[850,940,820,970,790,1000]] },
+  ];
+ 
+  // ---- ベジェを点列に変換(等間隔) ----
+  function flatten(start, segs){
+    const pts = [start.slice()];
+    let [x0,y0] = start;
+    for (const [x1,y1,x2,y2,x3,y3] of segs){
+      for (let i=1;i<=60;i++){
+        const t=i/60, u=1-t;
+        pts.push([
+          u*u*u*x0 + 3*u*u*t*x1 + 3*u*t*t*x2 + t*t*t*x3,
+          u*u*u*y0 + 3*u*u*t*y1 + 3*u*t*t*y2 + t*t*t*y3
+        ]);
+      }
+      x0=x3; y0=y3;
+    }
+    return pts;
+  }
+  function resample(poly, spacing){
+    const len=[0];
+    for (let i=1;i<poly.length;i++){
+      len.push(len[i-1] + Math.hypot(poly[i][0]-poly[i-1][0], poly[i][1]-poly[i-1][1]));
+    }
+    const total=len[len.length-1];
+    const n=Math.max(8, Math.round(total/spacing));
+    const out=[]; let j=1;
+    for (let k=0;k<=n;k++){
+      const target=total*k/n;
+      while (j<len.length-1 && len[j]<target) j++;
+      const seg=len[j]-len[j-1] || 1;
+      const f=(target-len[j-1])/seg;
+      out.push([
+        poly[j-1][0]+(poly[j][0]-poly[j-1][0])*f,
+        poly[j-1][1]+(poly[j][1]-poly[j-1][1])*f
+      ]);
+    }
+    return out;
+  }
+ 
+  const ribbons = defs.map((d, ri) => {
+    const pts = resample(flatten(d.start, d.segs), 24).map((p, i, arr) => ({
+      x:p[0], y:p[1], px:p[0], py:p[1],      // 現在位置 / 前フレーム位置(ベルレ積分)
+      bx:p[0], by:p[1],                      // 基準位置
+      rx:p[0], ry:p[1],                      // ゆらぎを含む「戻り先」
+      pin: i===0 || i===arr.length-1,        // 両端は固定
+      s: i/(arr.length-1)
+    }));
+    return { ...d, pts, phase: ri*1.7 };
+  });
+  const solids = ribbons.filter(r => r.solid);
+ 
+  // ---- 衝突ペアを事前計算(元々交差している箇所は無視する) ----
+  const pairs = [];
+  for (let a=0;a<solids.length;a++){
+    for (let b=a+1;b<solids.length;b++){
+      const A=solids[a], B=solids[b], minD=(A.w+B.w)/2;
+      for (const p of A.pts){
+        if (p.pin) continue;
+        for (const q of B.pts){
+          if (q.pin) continue;
+          const d=Math.hypot(p.bx-q.bx, p.by-q.by);
+          if (d>minD*1.35 && d<520) pairs.push([p,q,minD]);
+        }
+      }
+    }
+  }
+ 
+  // ---- 物理ステップ ----
+  let time = 0;
+  let grab = null;           // {p, ox, oy}
+  const pointer = {x:0,y:0};
+ 
+  function step(){
+    if (ambient) time += 1/60;
+ 
+    for (const r of ribbons){
+      const pts=r.pts;
+      for (const p of pts){
+        // 戻り先(ゆらゆらしたアンビエント動作)
+        const env=Math.sin(Math.PI*p.s);
+        // (Motion停止中は time が進まず、ゆらぎがその位置で止まる)
+        p.rx = p.bx + Math.sin(time*0.6 + p.s*5 + r.phase)*r.amp*env;
+        p.ry = p.by + Math.cos(time*0.5 + p.s*4 + r.phase)*r.amp*0.7*env;
+        if (p.pin){ p.x=p.rx; p.y=p.ry; p.px=p.x; p.py=p.y; continue; }
+ 
+        // ベルレ積分 + 減衰
+        let vx=(p.x-p.px)*DAMP, vy=(p.y-p.py)*DAMP;
+        const sp=Math.hypot(vx,vy);
+        if (sp>MAXV){ vx*=MAXV/sp; vy*=MAXV/sp; }
+        p.px=p.x; p.py=p.y;
+        p.x+=vx; p.y+=vy;
+ 
+        // 元の形に戻るバネ
+        p.x+=(p.rx-p.x)*SPRING;
+        p.y+=(p.ry-p.y)*SPRING;
+      }
+      // 隣の点のずれと平均化(なめらかな変形)
+      for (let it=0; it<3; it++){
+        for (let i=1;i<pts.length-1;i++){
+          const p=pts[i], a=pts[i-1], b=pts[i+1];
+          const dx=p.x-p.rx, dy=p.y-p.ry;
+          const ax=((a.x-a.rx)+(b.x-b.rx))/2, ay=((a.y-a.ry)+(b.y-b.ry))/2;
+          p.x+=(ax-dx)*COUPLE;
+          p.y+=(ay-dy)*COUPLE;
+        }
+      }
+    }
+ 
+    // ドラッグ中の点をポインタへ引っ張る
+    if (grab){
+      const p=grab.p;
+      p.x+=(pointer.x+grab.ox-p.x)*0.4;
+      p.y+=(pointer.y+grab.oy-p.y)*0.4;
+    }
+ 
+    // 別リボン同士の衝突 → 押し返す
+    for (let it=0; it<2; it++){
+      for (const [p,q,minD] of pairs){
+        const dx=p.x-q.x, dy=p.y-q.y;
+        const d2=dx*dx+dy*dy;
+        if (d2>=minD*minD || d2<1e-6) continue;
+        const d=Math.sqrt(d2);
+        const k=(minD-d)/d*0.5*BOUNCE;
+        p.x+=dx*k; p.y+=dy*k;
+        q.x-=dx*k; q.y-=dy*k;
+      }
+    }
+  }
+ 
+  // ---- 描画 ----
+  let dpr=1, scale=1, offX=0, offY=0, cw=0, ch=0;
+  function resize(){
+    const rect=canvas.getBoundingClientRect();
+    dpr=Math.min(window.devicePixelRatio||1, 2);
+    cw=rect.width; ch=rect.height;
+    canvas.width=Math.round(cw*dpr);
+    canvas.height=Math.round(ch*dpr);
+    scale=Math.max(cw/W, ch/H);            // 背景のcover相当
+    offX=(cw-W*scale)/2;
+    offY=(ch-H*scale)/2;
+  }
+  function drawRibbon(r){
+    const pts=r.pts;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i=1;i<pts.length-1;i++){
+      const mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+    ctx.lineWidth=r.w;
+    ctx.strokeStyle=r.color;
+    ctx.lineCap='butt';
+    ctx.lineJoin='round';
+    ctx.filter = r.blur ? `blur(${r.blur*scale*dpr}px)` : 'none';
+    ctx.stroke();
+  }
+  function draw(){
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*offX,dpr*offY);
+    for (const r of ribbons) drawRibbon(r);
+    ctx.filter='none';
+  }
+ 
+  // ---- ポインタ操作 ----
+  function toWorld(e){
+    const rect=canvas.getBoundingClientRect();
+    return { x:((e.clientX-rect.left)-offX)/scale, y:((e.clientY-rect.top)-offY)/scale };
+  }
+  function pick(x,y){
+    let best=null, bd=Infinity;
+    for (const r of solids){
+      const lim=r.w/2+14;
+      for (const p of r.pts){
+        if (p.pin) continue;
+        const d=Math.hypot(p.x-x, p.y-y);
+        if (d<lim && d<bd){ bd=d; best=p; }
+      }
+    }
+    return best;
+  }
+  canvas.addEventListener('pointerdown', e=>{
+    const w=toWorld(e);
+    const p=pick(w.x,w.y);
+    if (!p) return;
+    pointer.x=w.x; pointer.y=w.y;
+    grab={p, ox:p.x-w.x, oy:p.y-w.y};
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove', e=>{
+    const w=toWorld(e);
+    pointer.x=w.x; pointer.y=w.y;
+    if (!grab) canvas.classList.toggle('can-grab', !!pick(w.x,w.y));
+  });
+  const release=()=>{ grab=null; canvas.classList.remove('dragging'); };
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerleave', ()=>{ if(!grab) canvas.classList.remove('can-grab'); });
+ 
+  // ---- Motionボタン(ゆらゆら+Scroll線の停止/再開) ----
+  btn.addEventListener('click', ()=>{
+    const paused=hero.classList.toggle('paused');
+    ambient=!paused && !reduceMotion;
+    btn.setAttribute('aria-pressed', String(paused));
+  });
+ 
+  // ---- メインループ(60Hz固定ステップ) ----
+  let last=performance.now(), acc=0;
+  function loop(now){
+    acc+=Math.min(now-last, 100); last=now;
+    while (acc>=1000/60){ step(); acc-=1000/60; }
+    draw();
+    requestAnimationFrame(loop);
+  }
+  addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</script>
 </head>
 <body>
 <main class="hero" id="hero">
