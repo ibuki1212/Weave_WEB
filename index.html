@@ -27,8 +27,11 @@
   .hero{
     position:relative;
     min-height:100vh;
-    overflow:hidden;
+    overflow: visible;
   }
+
+  .page{ overflow-x: clip}
+
   .ribbons{
     position:absolute;inset:0;
     width:100%;height:100%;
@@ -197,33 +200,44 @@
     bottom: -40px;
 
   }
+
+  .sec {
+    position: relative; z-index: 1;
+    min-height: 80vh;
+    padding: 120px clamp(24px, 6.2vw, 120px);
+    display: flex; align-items: center;
+  }
+
+  .sec.right {justify-content: flex-end }
+
 </style>
 </head>
 <body>
-<main class="hero" id="hero">
-
-  <!-- 装飾リボン -->
-  <svg class="ribbons" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <!-- 黄色 -->
-    <g>
-      <path class="r-yellow" d="M1220 -10 C900 60 600 180 460 360 C380 470 400 600 470 710 C560 850 750 920 900 970"/>
-    </g>
-    <!-- ミント -->
-    <g>
-      <path class="r-mint" d="M830 -20 C980 70 1120 190 1145 380 C1165 560 1080 720 900 900 C860 940 830 960 800 985"/>
-    </g>
-    <!-- オレンジ -->
-    <g>
-      <path class="r-orange" d="M-40 62 C300 40 650 70 1000 130 C1300 190 1520 330 1620 450 C1710 560 1680 760 1640 900 C1620 970 1590 1010 1570 1040"/>
-    </g>
-    <!-- ネイビー系ティール -->
-    <g>
-      <path class="r-teal" d="M1715 -10 C1715 150 1680 330 1560 500 C1480 610 1420 650 1300 700 C1150 760 1000 800 880 910 C850 940 820 970 790 1000"/>
-    </g>
-  </svg>
-  <div class="circle">
-    <div class="circle-1"></div>
-  </div>
+<main class="page" id="page">
+  <section class="hero" id="hero">
+     <!-- 装飾リボン -->
+     <svg class="ribbons" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+       <!-- 黄色 -->
+       <g>
+         <path class="r-yellow" d="M1220 -10 C900 60 600 180 460 360 C380 470 400 600 470 710 C560 850 750 920 900 970"/>
+       </g>
+       <!-- ミント -->
+       <g>
+         <path class="r-mint" d="M830 -20 C980 70 1120 190 1145 380 C1165 560 1080 720 900 900 C860 940 830 960 800 985"/>
+       </g>
+       <!-- オレンジ -->
+       <g>
+         <path class="r-orange" d="M-40 62 C300 40 650 70 1000 130 C1300 190 1520 330 1620 450 C1710 560 1680 760 1640 900 C1620 970 1590 1010 1570 1040"/>
+       </g>
+       <!-- ネイビー系ティール -->
+       <g>
+         <path class="r-teal" d="M1715 -10 C1715 150 1680 330 1560 500 C1480 610 1420 650 1300 700 C1150 760 1000 800 880 910 C850 940 820 970 790 1000"/>
+       </g>
+     </svg>
+     <div class="circle">
+       <div class="circle-1"></div>
+     </div>
+  </section>
 
   <!-- ナビゲーション -->
   <header class="nav">
@@ -253,20 +267,84 @@
     </button>
   </header>
   
+  <section>
+    <button class="motion" id="motionBtn" aria-pressed="false" aria-label="アニメーションの再生・停止">
+       Motion <span class="bars"><i></i><i></i></span>
+    </button>
+    <h1 class="headline">
+      <span>From City to </span>
+      <span>Regions</span>
+    </h1>
+    <div class="scroll" aria-hidden="true">Scroll</div>
+  </section>
 
-  <button class="motion" id="motionBtn" aria-pressed="false" aria-label="アニメーションの再生・停止">
-    Motion <span class="bars"><i></i><i></i></span>
-  </button>
+  <section>
+    <h1>Hello</h1>
+  </section>
 
-  <h1 class="headline">
-    <span>From City to </span>
-    <span>Regions</span>
-  </h1>
+  <section>
+    <h1>Hello</h1>
+  </section>
 
-  <div class="scroll" aria-hidden="true">Scroll</div>
+  <section>
+    <h1>Hello</h1>
+  </section>
 
-  
+  <section>
+    <h1>Hello</h1>
+  </section>
 
+  <section class="sec" id="about" data-nav="about">
+    <div class="panel">
+      <p class="eyebrow">About</p>
+      <h2>A city woven from many threads</h2>
+      <p>Weave City is a fictional living lab where people, ideas and technologies are interlaced rather than stacked. Every path crosses another, and every crossing is a chance to try something new.</p>
+      <p>Try dragging the ribbons in the background — they push back.</p>
+    </div>
+  </section>
+
+  <section class="sec right" id="people" data-nav="people">
+    <div class="panel">
+      <p class="eyebrow">People</p>
+      <h2>People of Weave City</h2>
+      <p>Residents, researchers and neighbors shape the city together, from the first sketch to the daily routines that make a place feel like home.</p>
+      <div class="cards">
+        <div class="card"><b>Residents</b><span>Living and testing ideas every day.</span></div>
+        <div class="card"><b>Researchers</b><span>Turning curiosity into prototypes.</span></div>
+        <div class="card"><b>Neighbors</b><span>Joining workshops and open days.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="co-creation" data-nav="co-creation">
+    <div class="panel">
+      <p class="eyebrow">Co-Creation</p>
+      <h2>Build it together</h2>
+      <p>Partners from many fields bring their own threads. We provide the loom: shared spaces, open data and room to make mistakes safely.</p>
+      <a class="btn" href="#contact">Become a partner</a>
+    </div>
+  </section>
+
+  <section class="sec right" id="news" data-nav="news">
+    <div class="panel">
+      <p class="eyebrow">News</p>
+      <h2>Latest updates</h2>
+      <ul class="news">
+        <li><time>2026.11.01</time><span>Autumn open day announced for neighbors and visitors.</span></li>
+        <li><time>2026.10.18</time><span>New co-creation studio opens on the east side.</span></li>
+        <li><time>2026.10.02</time><span>Call for partners: mobility and daily-life projects.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" id="contact" data-nav="contact">
+    <div class="panel">
+      <p class="eyebrow">Contact</p>
+      <h2>Let's talk</h2>
+      <p>Have an idea, a question, or a thread you'd like to add? We'd love to hear from you.</p>
+      <a class="btn" href="mailto:hello@example.com">hello@example.com</a>
+    </div>
+  </section>
   
 </main>
 
