@@ -6,7 +6,7 @@
 <title>Setouchi Mirai Kaigi</title>
 <style>
   :root{
-    --bg:#d0fffb; --navy:#2f3a6b;
+    --bg:#00ffaa; --navy:#2f3a6b;
     --orange:#e2622b; --yellow:#f5d983; --mint:#86d3b6; --teal:#46737a;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -114,26 +114,60 @@
     padding:120px clamp(24px,6.2vw,120px);
     display:flex;align-items:center;
     margin: 200px 0 0 0;
+    white-space: nowrap;
+    top: 150px;
+    text-align: center;
+
   }
 
-  .panel p {
+  .title1{
     position: absolute;
-    width: 80px;
-    height: 30px;
-    line-height: 30px;
-    top: -50px;
-    left: 30px;
+    width: 100px clamp(50px, 90px, 120px);
+    height: 100px;
+    line-height: 1.1;
+    font-size: 5.5vw;
+    top: -200px;
+    left: -15px;
+    padding: 0 0 0 100px;
+    color: transparent;
+    -webkit-text-stroke: 4px #00000033;
+  }
+
+  .panel h3 {
+    position: absolute;
+    width: 100px clamp(50px, 90px, 120px);
+    height: 100px;
+    line-height: 1.1;
+    font-size: 5.5vw;
+    top: -100px;
+    left: 650px;
+    padding: 0 0 0 100px;
+    color: transparent;
+    -webkit-text-stroke: 4px #00000033;
+  }
+
+  .title2 {
+    position: absolute;
+    width: 100px clamp(50px, 90px, 120px);
+    height: 100px;
+    line-height: 1.1;
+    font-size: 5.5vw;
+    top: 5px;
+    left: 750px;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 4px #00000033;
   }
 
   .btn-flat-border {
   display: inline-block;
-  padding: 0.3em 1em;
+  padding: 0.3em 4em;
   text-decoration: none;
   color: #67c5ff;
   border: solid 2px #67c5ff;
   border-radius: 3px;
   transition: .4s;
-  text-align: center;
+  margin: 30px;
   }
   
   .btn-flat-border:hover,
@@ -147,21 +181,17 @@
     min-height:80vh;
     padding:120px clamp(24px,6.2vw,120px);
     display:flex; align-items:center;
-    margin: 200px 0 0 0;
+    margin: 10px 0 0 0;
     gap: 400px;
+    white-space: nowrap;
   }
-  .project .panel{
-    flex: 1;
-    max-width:560px;padding:40px 44px;border-radius:28px;
-    background:rgba(251,249,247,.7);backdrop-filter:blur(10px);
-  }
+
   .project img {
     max-width: 100%;
     width: 50%;
     height: 50%;
     box-shadow: 4px 4px 6px;
   }
-
 
   .sec {
     position:relative; z-index:1;
@@ -174,10 +204,17 @@
   .sec.right {justify-content:flex-end}
 
   .panel{
-    max-width:560px;padding:40px 44px;border-radius:28px;
-    background:rgba(251,249,247,.7);backdrop-filter:blur(10px);
+    max-width:800px;padding:40px 44px;border-radius:28px;
+    background:rgba(179, 247, 140, 0.7);backdrop-filter:blur(10px);
+    
   }
-  .panel h2{font-size:clamp(32px,4vw,56px);line-height:1.15;margin-bottom:16px}
+  .panel h2{
+    font-size:clamp(32px,4vw,56px);
+    line-height:1.15;
+    margin-top: 20px;
+    margin-bottom: 16px;
+
+  }
   .panel p{font-size:18px}
 </style>
 </head>
@@ -240,21 +277,22 @@
 
   <section class="introduction">
     <div class="panel">
-        <p>Regional Revitalization</p>
-        <h2>About Us</h2>
-        <p></p>
+        <h1 class="title1">Regional Revitalization</h1>
+        <h2>What is SetouchiMirai?</h2>
+        <h3 id="uni">×</h3>
+        <h1 class="title2"> Entrepreneruship</h1>
         <a href="#" class="btn-flat-border">More</a>
     </div>
   </section>
   <section class="project">
-    
     <div class="panel">
       <h2>Project</h2>
       <p>We are doing Regional Revitalization</p>
-      <button id="all_project">From Here</button>
+      <a href="#" class="btn-flat-border">More</a>
     </div>
     <img src="./images/project.jpg" alt="photo">
-    
+    <img src="./images/project.jpg" alt="photo">
+    <img src="./images/project.jpg" alt="photo">
   </section>
 
   <section class="sec right">
