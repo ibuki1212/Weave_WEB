@@ -198,6 +198,76 @@
   }
   .panel p{font-size:18px}
 
+  .project{
+    position:relative;z-index:1;
+    --per:3;                       /* 同時に見せる枚数(JSが読み取る) */
+    --pgap:32px;
+    padding:40px 0 200px;
+  }
+  .project .title{margin-bottom:48px}
+  .p-view{
+    overflow:hidden;
+    margin:0 6.2vw;
+    padding:6px 0 10px;
+    touch-action:pan-y;
+  }
+  .p-track{
+    display:flex;gap:var(--pgap);
+    transition:transform .7s var(--ease);
+    will-change:transform;
+  }
+  .p-card{
+    flex:0 0 calc((100% - var(--pgap) * (var(--per) - 1)) / var(--per));
+    min-width:0;
+    text-decoration:none;color:inherit;
+  }
+  .p-card .ph{
+    aspect-ratio:4/3;border-radius:30px;overflow:hidden;
+    background:#cfd3e6;
+  }
+  .p-card img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .6s var(--ease);
+    -webkit-user-drag:none;user-select:none;
+  }
+  .p-card:hover img{transform:scale(1.05)}
+  .p-card .tag{
+    display:inline-block;margin:20px 0 8px;
+    padding:4px 14px;border-radius:999px;
+    font-size:14px;font-weight:700;letter-spacing:.06em;
+    background:rgba(242,169,59,.28);color:#8a5a10;
+  }
+  .p-card h3{font-size:clamp(20px,1.7vw,28px);line-height:1.35;margin-bottom:6px}
+  .p-card p{font-size:16px;opacity:.85}
+ 
+  .p-foot{
+    margin:36px 6.2vw 0;
+    display:flex;align-items:center;gap:28px;
+  }
+  .p-bar{position:relative;flex:1;height:2px;background:rgba(47,58,107,.25)}
+  .p-bar i{
+    position:absolute;left:0;top:0;height:100%;width:0;
+    background:var(--navy);transition:width .6s var(--ease);
+  }
+  .p-btns{display:flex;gap:14px}
+  .p-btn{
+    width:64px;height:64px;border-radius:50%;border:0;
+    display:grid;place-items:center;
+    background:var(--navy);color:#fff;cursor:pointer;
+    transition:transform .2s,opacity .3s,background .2s;
+  }
+  .p-btn:hover:not(:disabled){background:#3d4a85;transform:scale(1.08)}
+  .p-btn:disabled{opacity:.3;cursor:default}
+  .p-btn:focus-visible{outline:3px solid #7b86d8;outline-offset:3px}
+  .p-btn svg{width:24px;height:24px}
+  @media (max-width:1000px){.project{--per:2}}
+  @media (max-width:640px){
+    .project{--per:1;--pgap:20px}
+    .p-view,.p-foot{margin-left:5vw;margin-right:5vw}
+    .p-btn{width:52px;height:52px}
+    .project .title{padding-left:10vw}
+  }
+
   .gallery{
     position:relative;z-index:1;
     padding:200px 0 120px;
@@ -421,6 +491,24 @@
     </div>
     </section>
 </div>
+
+<section class="project" id="project" aria-roledescription="carousel" aria-label="Project">
+  <h2 class="title">Project</h2>
+  <div class="p-view" id="pView">
+    <div class="p-track" id="pTrack"></div>
+  </div>
+  <div class="p-foot">
+    <div class="p-bar"><i id="pFill"></i></div>
+    <div class="p-btns">
+      <button class="p-btn" id="pPrev" aria-label="前のプロジェクト">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
+      </button>
+      <button class="p-btn" id="pNext" aria-label="次のプロジェクト">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
  
 <dialog id="lightbox" aria-label="拡大表示">
   <button class="close" id="close" aria-label="閉じる">×</button>
