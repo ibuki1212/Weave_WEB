@@ -174,15 +174,18 @@
     color: white;
   }
 
-  .sec {
+  .news {
     position:relative; z-index:1;
+    display: inline-block;
     min-height:80vh;
     padding:120px clamp(24px,6.2vw,120px);
     display:flex;align-items:center;
-    margin: 200px 0 0 0;
-  .sec.right{justify-content:flex-end}
+    margin: -200px 0 0 0;
   }
-  .sec.right {justify-content:flex-end}
+  .news_title {
+    padding: 0 100px;
+
+  }
 
   .panel{
     max-width:800px;padding:40px 44px;border-radius:28px;
@@ -194,15 +197,85 @@
     line-height:1.15;
     margin-top: 20px;
     margin-bottom: 16px;
-
   }
   .panel p{font-size:18px}
+
+  .news {
+    position: relative; z-index:1;
+    padding: 0 0 220px;
+  }
+
+  .news .title {margin-bottom: 40px;}
+
+  .new-box{
+    margin:0 6.2vw;
+    padding:12px 44px;
+    background:rgba(251,249,247,.72);
+    backdrop-filter(blur(10px));
+    border-radius: 32px;
+  }
+
+  .news-list{list-style:none}
+  .news-list li{border-bottom:2px dotted rgba(47,58,107,.4)}
+  .news-list li:last-child{border-bottom:0}
+  .news-item{
+    display:flex; align-items:center; gap:28px;
+    padding:26px 4px;
+    color:var(--navy);text-decoration:none;
+    transition:background .25s,padding .25s;
+  }
+  .news-item:hover{padding-left:14px; padding-right:14px; background:rgba(47,58,107,.05);border-radius:16px}
+  .news-item time {
+    flex:none;
+    font-size:18px;
+    font-weight:700; color:var(--teal,#46737a);
+    font-variant-numeric:tabular-nums; letter-spacing: .02em;
+  }
+
+  .news-item .cat {
+    flex:none; min-width:112px; text-align:center;
+    padding:4px 14px; border-radius:999px;
+    font-size:14px; font-weight:700; letter-spacing: .06em;
+    background:rgba(242,169,59,.28); color: #8a5a10;
+  }
+  .news-item .cat.info{background:rgba(110,168,220,.28);color:#2d5e8f}
+  .news-item .cat.event{background:rgba(95,191,150,.28);color:#25704f}
+  .news-item .txt {
+    flex:1; min-width:0;
+    font-size:20px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .news-item .go {flex:none;width:26px;height:26px;transition:transform .25s}
+  .news-item:hover .go{transform:translateX(5px)}
+  .news-more {
+    display: flex; justify-content:flex-end;
+    margin:28px 6.2vw 0;
+  }
+  .news-more a{
+    display:inline-flex; align-items:center; gap:14px;
+    font-size:20px; font-weight:700; color:var(--navy); text-decoration: none;
+  }
+  .news-more .circle {
+    width:48px; height:48px; border-radius:50%;
+    display:grid; place-items:center;
+    background:var(--navy); color:#fff; transition:transform .25s;
+  }
+  .news-more a:hover .circle{transform:translateX(4px)}
+  .news-more svg{width:22px; height:22px}
+  @media (max-width:760px) {
+    .news-box{margin:0 4vw;padding:6px 20px}
+    .news-item{gap:12px; padding:20px 2px}
+    .news-item time{font-size: 14px}
+    .news-item .cat{display: none}
+    .news-item .txt{font-size:16px}
+    .nwqa .title{padding-left: 10vw}
+  }
 
   .project{
     position:relative;z-index:1;
     --per:3;                       /* 同時に見せる枚数(JSが読み取る) */
     --pgap:32px;
-    padding:40px 0 200px;
+    padding:-50px 0 200px;
   }
   .project .title{margin-bottom:48px}
   .p-view{
@@ -456,12 +529,29 @@
     </div>
   </section>
 
-  <section class="sec right">
+  <section class="news">
     <div class="panel">
-      <h2>Another section</h2>
-      <p>sectionの外に出ても、SVGの線はクリップされません。</p>
+      <h2 class="news_title">News</h2>
     </div>
   </section>
+
+  <section class="project" id="project" aria-roledescription="carousel" aria-label="Project">
+  <h2 class="title">Project</h2>
+  <div class="p-view" id="pView">
+    <div class="p-track" id="pTrack"></div>
+  </div>
+  <div class="p-foot">
+    <div class="p-bar"><i id="pFill"></i></div>
+    <div class="p-btns">
+      <button class="p-btn" id="pPrev" aria-label="前のプロジェクト">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
+      </button>
+      <button class="p-btn" id="pNext" aria-label="次のプロジェクト">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
 
   <section class="gallery">
     <h2 class="title">Gallery</h2>
@@ -491,24 +581,6 @@
     </div>
     </section>
 </div>
-
-<section class="project" id="project" aria-roledescription="carousel" aria-label="Project">
-  <h2 class="title">Project</h2>
-  <div class="p-view" id="pView">
-    <div class="p-track" id="pTrack"></div>
-  </div>
-  <div class="p-foot">
-    <div class="p-bar"><i id="pFill"></i></div>
-    <div class="p-btns">
-      <button class="p-btn" id="pPrev" aria-label="前のプロジェクト">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
-      </button>
-      <button class="p-btn" id="pNext" aria-label="次のプロジェクト">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
-      </button>
-    </div>
-  </div>
-</section>
  
 <dialog id="lightbox" aria-label="拡大表示">
   <button class="close" id="close" aria-label="閉じる">×</button>
