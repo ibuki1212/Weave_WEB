@@ -6,13 +6,15 @@
 <title>Setouchi Mirai Kaigi</title>
 <style>
   :root{
-    --bg:#00ffaa; --navy:#2f3a6b;
+    --bg:#75fdc4; --navy:#2f3a6b;
     --orange:#e2622b; --yellow:#f5d983; --mint:#86d3b6; --teal:#46737a;
+    --pink: #f7cdbd; --w: 57vw; --gap:3.2vw; --step:calc(var(--w)* .935 + var(--gap));
+    --ease:cubic-bezier(.22,.8,.2,1);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
     font-family:"Helvetica Neue","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
-    background:var(--bg);color:var(--navy);line-height:1.7;
+    background:var(--bg);color:var(--navy);line-height:1.7; overflow-x: hidden;
   }
   /* 画面の左右にはみ出した端で横スクロールが出ないようにする(縦方向には影響しない) */
   .page{overflow-x:clip}
@@ -107,7 +109,6 @@
   .headline span{display:block}
   .headline span:nth-child(2){padding-left:.9em}
 
-  /* ★ポイント3: 次以降の section は svg より手前に置き、背景は透明にする */
   .introduction {
     position:relative; z-index:1;
     min-height:80vh;
@@ -129,8 +130,7 @@
     top: -200px;
     left: -15px;
     padding: 0 0 0 100px;
-    color: transparent;
-    -webkit-text-stroke: 4px #00000033;
+    color: black;
   }
 
   .panel h3 {
@@ -142,8 +142,7 @@
     top: -100px;
     left: 650px;
     padding: 0 0 0 100px;
-    color: transparent;
-    -webkit-text-stroke: 4px #00000033;
+    color: black;
   }
 
   .title2 {
@@ -155,8 +154,7 @@
     top: 5px;
     left: 750px;
     white-space: nowrap;
-    color: transparent;
-    -webkit-text-stroke: 4px #00000033;
+    color: black;
   }
 
   .btn-flat-border {
@@ -400,18 +398,16 @@
         <h1 class="title1">Regional Revitalization</h1>
         <h2>What is SetouchiMirai?</h2>
         <h3 id="uni">×</h3>
-        <h1 class="title2"> Entrepreneruship</h1>
-        <a href="#" class="btn-flat-border">More</a>
+        <h1 class="title2"> Entrepreneurship</h1>
+        <a href="#" class="btn-flat-border">Learn More</a>
     </div>
   </section>
   <section class="project">
     <div class="panel">
-      <h2>Project</h2>
+      <h2>Our Project</h2>
       <p>We are doing Regional Revitalization</p>
-      <a href="#" class="btn-flat-border">More</a>
+      <a href="#" class="btn-flat-border">Learn More</a>
     </div>
-    <img src="./images/project.jpg" alt="photo">
-    <img src="./images/project.jpg" alt="photo">
     <img src="./images/project.jpg" alt="photo">
   </section>
 
