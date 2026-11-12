@@ -176,77 +176,6 @@
   .cta .circle svg{width:28px;height:28px;transition:transform .25s}
   .cta:hover .circle svg{transform:translateX(4px)}
 
-  /* ---------- Project(3枚並びのスライダー) ---------- */
-  .project{
-    position:relative;z-index:1;
-    --per:3;                       /* 同時に見せる枚数(JSが読み取る) */
-    --pgap:32px;
-    padding:40px 0 200px;
-  }
-  .project .title{margin-bottom:48px}
-  .p-view{
-    overflow:hidden;
-    margin:0 6.2vw;
-    padding:6px 0 10px;
-    touch-action:pan-y;
-  }
-  .p-track{
-    display:flex;gap:var(--pgap);
-    transition:transform .7s var(--ease);
-    will-change:transform;
-  }
-  .p-card{
-    flex:0 0 calc((100% - var(--pgap) * (var(--per) - 1)) / var(--per));
-    min-width:0;
-    text-decoration:none;color:inherit;
-  }
-  .p-card .ph{
-    aspect-ratio:4/3;border-radius:30px;overflow:hidden;
-    background:#cfd3e6;
-  }
-  .p-card img{
-    width:100%;height:100%;object-fit:cover;display:block;
-    transition:transform .6s var(--ease);
-    -webkit-user-drag:none;user-select:none;
-  }
-  .p-card:hover img{transform:scale(1.05)}
-  .p-card .tag{
-    display:inline-block;margin:20px 0 8px;
-    padding:4px 14px;border-radius:999px;
-    font-size:14px;font-weight:700;letter-spacing:.06em;
-    background:rgba(242,169,59,.28);color:#8a5a10;
-  }
-  .p-card h3{font-size:clamp(20px,1.7vw,28px);line-height:1.35;margin-bottom:6px}
-  .p-card p{font-size:16px;opacity:.85}
-
-  .p-foot{
-    margin:36px 6.2vw 0;
-    display:flex;align-items:center;gap:28px;
-  }
-  .p-bar{position:relative;flex:1;height:2px;background:rgba(47,58,107,.25)}
-  .p-bar i{
-    position:absolute;left:0;top:0;height:100%;width:0;
-    background:var(--navy);transition:width .6s var(--ease);
-  }
-  .p-btns{display:flex;gap:14px}
-  .p-btn{
-    width:64px;height:64px;border-radius:50%;border:0;
-    display:grid;place-items:center;
-    background:var(--navy);color:#fff;cursor:pointer;
-    transition:transform .2s,opacity .3s,background .2s;
-  }
-  .p-btn:hover:not(:disabled){background:#3d4a85;transform:scale(1.08)}
-  .p-btn:disabled{opacity:.3;cursor:default}
-  .p-btn:focus-visible{outline:3px solid #7b86d8;outline-offset:3px}
-  .p-btn svg{width:24px;height:24px}
-  @media (max-width:1000px){.project{--per:2}}
-  @media (max-width:640px){
-    .project{--per:1;--pgap:20px}
-    .p-view,.p-foot{margin-left:5vw;margin-right:5vw}
-    .p-btn{width:52px;height:52px}
-    .project .title{padding-left:10vw}
-  }
-
   /* ---------- Members(メンバー紹介) ---------- */
   .members{
     position:relative;z-index:1;
@@ -443,34 +372,16 @@
   <g><path class="green"  d="M1520 -60 C1500 180 1440 300 1330 420 C1200 560 1100 700 900 880 C780 980 660 1090 540 1180"/></g>
 </svg>
 
-<!-- ナビ -->
-<header class="nav">
-  <a class="brand" href="#">
-    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
-      <rect x="5" y="5" width="30" height="30" rx="6"/>
-      <path d="M5 14c10 0 10 12 20 12s10-8 10-8M5 26c10 0 10-12 20-12"/>
-    </svg>
-    Weave City
-  </a>
-  <nav aria-label="メインメニュー">
-    <ul class="menu">
-      <li><a class="active" href="#">Home</a></li>
-      <li><a href="#">About</a></li>
-      <li><a href="#">People</a></li>
-      <li><a href="#">Co-Creation</a></li>
-      <li><a href="#">News</a></li>
-      <li><a href="#">Contact</a></li>
-    </ul>
-  </nav>
-  <button class="lang" aria-label="言語を切り替え">
-    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
-      <circle cx="16" cy="16" r="13"/><ellipse cx="16" cy="16" rx="6" ry="13"/>
-      <path d="M3 16h26M5 9h22M5 23h22"/>
-    </svg>
-  </button>
-</header>
+<div id="header"></div>
 
-<main class="gallery">
+<section class="members" id="members">
+  <h2 class="title">Members</h2>
+  <p class="lead">Meet the people behind Weave City — researchers, designers and community builders working side by side.</p>
+  <div class="filters" id="filters" role="group" aria-label="メンバーを絞り込む"></div>
+  <div class="member-grid" id="memberGrid"></div>
+</section>
+
+<section class="gallery">
   <h2 class="title">Gallery</h2>
 
   <div class="stage" id="stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Gallery">
@@ -483,7 +394,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
     </button>
   </div>
-
   <div class="foot">
     <div class="counter" aria-live="polite">
       <span class="count" id="count">1/8</span>
@@ -496,84 +406,6 @@
       </span>
     </a>
   </div>
-</main>
-
-<section class="project" id="project" aria-roledescription="carousel" aria-label="Project">
-  <h2 class="title">Project</h2>
-  <div class="p-view" id="pView">
-    <div class="p-track" id="pTrack"></div>
-  </div>
-  <div class="p-foot">
-    <div class="p-bar"><i id="pFill"></i></div>
-    <div class="p-btns">
-      <button class="p-btn" id="pPrev" aria-label="前のプロジェクト">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
-      </button>
-      <button class="p-btn" id="pNext" aria-label="次のプロジェクト">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
-      </button>
-    </div>
-  </div>
-</section>
-
-<section class="members" id="members">
-  <h2 class="title">Members</h2>
-  <p class="lead">Meet the people behind Weave City — researchers, designers and community builders working side by side.</p>
-  <div class="filters" id="filters" role="group" aria-label="メンバーを絞り込む"></div>
-  <div class="member-grid" id="memberGrid"></div>
-</section>
-
-<section class="news" id="news">
-  <h2 class="title">News</h2>
-  <div class="news-box">
-    <ul class="news-list">
-      <li>
-        <a class="news-item" href="#">
-          <time datetime="2026-11-05">2026.11.05</time>
-          <span class="cat">Press</span>
-          <span class="txt">Media kit updated with new photos and fact sheets for the winter season</span>
-          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
-        </a>
-      </li>
-      <li>
-        <a class="news-item" href="#">
-          <time datetime="2026-11-01">2026.11.01</time>
-          <span class="cat event">Event</span>
-          <span class="txt">Autumn open day for neighbors and visitors will be held on November 23</span>
-          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
-        </a>
-      </li>
-      <li>
-        <a class="news-item" href="#">
-          <time datetime="2026-10-18">2026.10.18</time>
-          <span class="cat info">Info</span>
-          <span class="txt">New co-creation studio opens on the east side of the district</span>
-          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
-        </a>
-      </li>
-      <li>
-        <a class="news-item" href="#">
-          <time datetime="2026-10-02">2026.10.02</time>
-          <span class="cat">Press</span>
-          <span class="txt">Call for partners: mobility and daily-life projects for the coming year</span>
-          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
-        </a>
-      </li>
-      <li>
-        <a class="news-item" href="#">
-          <time datetime="2026-09-20">2026.09.20</time>
-          <span class="cat info">Info</span>
-          <span class="txt">Maintenance notice: the visitor reservation page will be unavailable on September 28</span>
-          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div class="news-more">
-    <a href="#">View all news
-      <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg></span>
-    </a>
-  </div>
 </section>
 
 <dialog id="lightbox" aria-label="拡大表示">
@@ -581,6 +413,11 @@
   <img id="lbImg" alt="">
 </dialog>
 
+<script>
+    fetch("header.html")
+        .then((response) => response.text())
+        .then((data) => document.querySelector("#header").innerHTML = data)
+</script>
 <script>
 (() => {
   /* =====================================================
@@ -738,90 +575,6 @@
   lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
 
   layout();
-})();
-</script>
-
-<script>
-(() => {
-  /* =====================================================
-     Project: 3枚を横に並べ、横にずらして切り替えるスライダー
-     ★ 自分の画像を使うときは src を指定してください。
-     ===================================================== */
-  const projects = [
-    { tag:'Mobility',  title:'Slow Streets Lab',        text:'Testing quiet, human-scale ways to move around the city.' },
-    { tag:'Community', title:'Shared Garden Network',   text:'Neighbors grow, trade and learn together on every block.' },
-    { tag:'Energy',    title:'Open Energy Commons',     text:'A neighborhood grid where households share what they make.' },
-    { tag:'Care',      title:'Check-in Circles',        text:'Light-touch support that keeps people connected.' },
-    { tag:'Culture',   title:'Pop-up Makers Market',    text:'Local makers and visitors meet in ever-changing spaces.' },
-    { tag:'Sensing',   title:'Listening Walks',         text:'Residents map sound, light and comfort along familiar routes.' },
-  ];
-
-  const view  = document.getElementById('pView');
-  const track = document.getElementById('pTrack');
-  const fill  = document.getElementById('pFill');
-  const prevB = document.getElementById('pPrev');
-  const nextB = document.getElementById('pNext');
-  const root  = document.getElementById('project');
-  const n = projects.length;
-  let idx = 0;
-
-  projects.forEach((p, i) => {
-    const a = document.createElement('a');
-    a.className = 'p-card';
-    a.href = '#';
-    a.draggable = false;
-    a.innerHTML = `
-      <div class="ph"><img alt="" draggable="false" loading="lazy"></div>
-      <span class="tag"></span>
-      <h3></h3>
-      <p></p>`;
-    a.querySelector('img').src = p.src || (window.scene ? window.scene(i + 3) : '');
-    a.querySelector('img').alt = p.title;
-    a.querySelector('.tag').textContent = p.tag;
-    a.querySelector('h3').textContent = p.title;
-    a.querySelector('p').textContent = p.text;
-    a.addEventListener('click', e => { if (dragged) e.preventDefault(); });
-    track.appendChild(a);
-  });
-
-  const perView = () => parseInt(getComputedStyle(root).getPropertyValue('--per'), 10) || 3;
-  const maxIdx  = () => Math.max(0, n - perView());
-
-  function update(){
-    idx = Math.min(Math.max(idx, 0), maxIdx());
-    const card = track.children[0];
-    const gap  = parseFloat(getComputedStyle(track).columnGap) || 0;
-    const step = card.getBoundingClientRect().width + gap;
-    track.style.transform = `translateX(${-idx * step}px)`;   // 1枚分ずつ横にずらす
-    prevB.disabled = idx === 0;
-    nextB.disabled = idx >= maxIdx();
-    // 進捗: 表示中の右端が全体のどこまで進んだか
-    fill.style.width = ((idx + perView()) / n * 100) + '%';
-    [...track.children].forEach((c, i) => {
-      const visible = i >= idx && i < idx + perView();
-      c.tabIndex = visible ? 0 : -1;
-      c.setAttribute('aria-hidden', visible ? 'false' : 'true');
-    });
-  }
-  prevB.addEventListener('click', () => { idx--; update(); });
-  nextB.addEventListener('click', () => { idx++; update(); });
-  addEventListener('resize', update);
-
-  /* ---- ドラッグ / スワイプで1枚ずらす ---- */
-  let sx = null, dragged = false;
-  view.addEventListener('pointerdown', e => { sx = e.clientX; dragged = false; });
-  addEventListener('pointermove', e => {
-    if (sx !== null && Math.abs(e.clientX - sx) > 8) dragged = true;
-  });
-  addEventListener('pointerup', e => {
-    if (sx === null) return;
-    const dx = e.clientX - sx;
-    if (Math.abs(dx) > 50){ idx += dx < 0 ? 1 : -1; update(); }
-    sx = null;
-    setTimeout(() => dragged = false, 0);
-  });
-
-  update();
 })();
 </script>
 <script>
