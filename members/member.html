@@ -176,7 +176,6 @@
   .cta .circle svg{width:28px;height:28px;transition:transform .25s}
   .cta:hover .circle svg{transform:translateX(4px)}
 
-  /* ---------- Members(メンバー紹介) ---------- */
   .members{
     position:relative;z-index:1;
     padding:40px 0 160px;
@@ -203,7 +202,7 @@
   .chip:hover{transform:translateY(-2px);border-color:var(--navy)}
   .chip[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
   .chip:focus-visible{outline:3px solid #7b86d8;outline-offset:3px}
-
+ 
   .member-grid{
     margin:0 6.2vw;
     display:grid;
@@ -254,7 +253,62 @@
     .chip{padding:10px 18px;font-size:15px}
   }
   @media (prefers-reduced-motion:reduce){.member{animation:none}}
-
+ 
+  /* ---------- Members: 代表・副代表(大きく表示) ---------- */
+  .leaders{
+    margin:0 6.2vw 80px;
+    display:grid;grid-template-columns:repeat(2,1fr);gap:32px;
+  }
+  .leader{
+    display:flex;gap:36px;align-items:stretch;
+    padding:24px;
+    background:rgba(251,249,247,.82);
+    backdrop-filter:blur(12px);
+    border-radius:40px;
+    animation:pop .6s var(--ease) both;
+    transition:transform .4s var(--ease),box-shadow .4s;
+  }
+  .leader:hover{transform:translateY(-6px);box-shadow:0 22px 44px rgba(47,58,107,.18)}
+  .leader:nth-child(2){animation-delay:.1s}
+  .l-avatar{
+    flex:0 0 42%;
+    aspect-ratio:4/5;
+    border-radius:30px;overflow:hidden;
+  }
+  .l-avatar img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s var(--ease)}
+  .leader:hover .l-avatar img{transform:scale(1.06)}
+  .l-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;padding:8px 8px 8px 0}
+  .badge{
+    align-self:flex-start;
+    padding:6px 18px;border-radius:999px;margin-bottom:18px;
+    font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--navy);color:#fff;
+  }
+  .leader:nth-child(2) .badge{background:var(--teal)}
+  .leader h3{font-size:clamp(30px,3vw,46px);line-height:1.2}
+  .l-role{font-size:18px;font-weight:600;opacity:.75;margin:6px 0 18px}
+  .l-bio{font-size:17px;line-height:1.75;margin-bottom:18px}
+  .l-msg{
+    padding-left:18px;border-left:4px solid var(--orange);
+    font-size:17px;font-weight:600;line-height:1.7;
+  }
+  .sub-title{
+    margin:0 6.2vw 20px;
+    font-size:15px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--orange);
+  }
+  @media (max-width:1200px){
+    .leaders{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .leaders{margin:0 5vw 56px}
+    .leader{flex-direction:column;gap:20px;padding:18px}
+    .l-avatar{flex:none;aspect-ratio:1}
+    .l-body{padding:0 6px 6px}
+    .sub-title{margin-left:5vw}
+  }
+  @media (prefers-reduced-motion:reduce){.leader{animation:none}}
+  
   /* ---------- News(お知らせ一覧: 1件1行・点線区切り) ---------- */
   .news{
     position:relative;z-index:1;
@@ -377,6 +431,11 @@
 <section class="members" id="members">
   <h2 class="title">Members</h2>
   <p class="lead">Meet the people behind Weave City — researchers, designers and community builders working side by side.</p>
+  <!-- 代表・副代表(大きく表示) -->
+  <div class="leaders" id="leaders"></div>
+ 
+  <!-- そのほかのメンバー -->
+  <p class="sub-title">Team</p>
   <div class="filters" id="filters" role="group" aria-label="メンバーを絞り込む"></div>
   <div class="member-grid" id="memberGrid"></div>
 </section>
@@ -591,10 +650,10 @@
     { name:'Lucas Silva',    role:'Community Manager',  group:'Community', bio:'The friendly face at every open day. Keeps neighbors and projects in conversation.' },
     { name:'Aiko Tanaka',    role:'Mobility Researcher',group:'Research',  bio:'Tests quiet, human-scale ways of moving around, one slow street at a time.' },
     { name:'Sofia Rossi',    role:'Product Designer',   group:'Design',    bio:'Turns rough sketches into tools residents actually enjoy using every day.' },
-    { name:'Kenji Watanabe', role:'Partnerships',       group:'Core',      bio:'Brings new partners to the table and makes sure every voice gets a seat.' },
+    { name:'Kenji Watanabe', role:'Vice Representative',       group:'Core',      bio:'Brings new partners to the table and makes sure every voice gets a seat.' },
     { name:'Priya Nair',     role:'Data Scientist',     group:'Research',  bio:'Finds the stories hidden in sensor data — always with residents\u2019 consent.' },
   ];
-
+ 
   /* ---- イラスト風アバター(SVG)を生成 ---- */
   const bgs    = ['#f7cdbd','#cfe9dd','#cfe0f3','#f9e3b5','#e3dcf3'];
   const shirts = ['#2f3a6b','#46737a','#e2622b','#5b6fb5','#2f3a6b'];
@@ -621,13 +680,45 @@
     </svg>`;
     return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
   }
-
+ 
   /* ---- カード生成 ---- */
   const grid = document.getElementById('memberGrid');
   const filters = document.getElementById('filters');
-  const groups = ['All', ...new Set(members.map(m => m.group))];
-
-  members.forEach((m, i) => {
+  /* ---- 代表・副代表(role に "Representative" を含む人)を上に大きく表示 ---- */
+  const leaders = members.filter(m => /Representative/i.test(m.role));
+  const rest    = members.filter(m => !leaders.includes(m));
+  const messages = {                                   // 代表・副代表のひとこと(仮)
+    'Haruka Mori':    'A city is a conversation. My job is to keep it going.',
+    'Kenji Watanabe': 'Good ideas travel further when more people carry them.',
+  };
+  const leaderBox = document.getElementById('leaders');
+  leaders.forEach(m => {
+    const el = document.createElement('article');
+    el.className = 'leader';
+    el.innerHTML = `
+      <div class="l-avatar"><img alt=""></div>
+      <div class="l-body">
+        <span class="badge"></span>
+        <h3></h3>
+        <p class="l-role"></p>
+        <p class="l-bio"></p>
+        <blockquote class="l-msg"></blockquote>
+      </div>`;
+    const img = el.querySelector('img');
+    img.src = m.src || avatar(members.indexOf(m));
+    img.alt = `${m.name}のポートレート`;
+    el.querySelector('.badge').textContent = m.role;
+    el.querySelector('h3').textContent = m.name;
+    el.querySelector('.l-role').textContent = m.group;
+    el.querySelector('.l-bio').textContent = m.bio;
+    const q = el.querySelector('.l-msg');
+    if (messages[m.name]) q.textContent = messages[m.name]; else q.remove();
+    leaderBox.appendChild(el);
+  });
+ 
+  const groups = ['All', ...new Set(rest.map(m => m.group))];
+ 
+  rest.forEach((m, i) => {
     const card = document.createElement('article');
     card.className = 'member';
     card.dataset.group = m.group;
@@ -641,7 +732,7 @@
         <p class="bio"></p>
       </div>`;
     const img = card.querySelector('img');
-    img.src = m.src || avatar(i);
+    img.src = m.src || avatar(members.indexOf(m));
     img.alt = `${m.name}のポートレート`;
     const g = card.querySelector('.group');
     g.textContent = m.group;
@@ -651,7 +742,7 @@
     card.querySelector('.bio').textContent = m.bio;
     grid.appendChild(card);
   });
-
+ 
   /* ---- 絞り込みボタン ---- */
   groups.forEach((g, i) => {
     const b = document.createElement('button');
