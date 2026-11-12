@@ -1,12 +1,926 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Setouchi Mirai's member</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="./member.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weave City – Gallery</title>
+<style>
+  :root{
+    --bg:#ede8e4;
+    --navy:#2f3a6b;
+    --navy-soft:#7a80a8;
+    --orange:#f2a93b;
+    --blue:#6ea8dc;
+    --green:#5fbf96;
+    --pink:#f7cdbd;
+    --w:57vw;                                   /* 中央の写真の幅 */
+    --gap:3.2vw;                                /* 写真同士の間隔 */
+    --step:calc(var(--w) * .935 + var(--gap));  /* 中央→隣の写真の中心間距離 */
+    --ease:cubic-bezier(.22,.8,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Helvetica Neue","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    background:var(--bg);color:var(--navy);
+    min-height:100vh;overflow-x:hidden;
+  }
+
+  /* ---------- 背景のリボン ---------- */
+  .bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+  .bg path{fill:none;stroke-linecap:butt}
+  .bg .pink  {stroke:var(--pink);  stroke-width:44;opacity:.85}
+  .bg .orange{stroke:var(--orange);stroke-width:40}
+  .bg .blue  {stroke:var(--blue);  stroke-width:40}
+  .bg .green {stroke:var(--green); stroke-width:40}
+  .bg g{animation:sway 16s ease-in-out infinite alternate}
+  .bg g:nth-child(2){animation-duration:20s;animation-direction:alternate-reverse}
+  .bg g:nth-child(3){animation-duration:13s}
+  .bg g:nth-child(4){animation-duration:18s;animation-direction:alternate-reverse}
+  @keyframes sway{from{transform:translate(-12px,6px)}to{transform:translate(14px,-8px)}}
+
+  /* ---------- ナビ(上部に固定) ---------- */
+  .nav{
+    position:fixed;top:24px;left:24px;right:24px;z-index:30;
+    height:116px;padding:0 48px;
+    display:flex;align-items:center;justify-content:space-between;
+    background:rgba(251,249,247,.94);
+    border-radius:36px;backdrop-filter:blur(12px);
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    font-size:28px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+    color:var(--navy);text-decoration:none;
+  }
+  .brand svg{width:34px;height:34px}
+  .menu{display:flex;gap:60px;list-style:none}
+  .menu a{
+    position:relative;font-size:21px;font-weight:600;
+    color:var(--navy);text-decoration:none;padding:6px 0;
+  }
+  .menu a.active::before{
+    content:"";position:absolute;left:-26px;right:-26px;top:50%;height:20px;
+    transform:translateY(-35%);z-index:-1;
+    background:radial-gradient(ellipse at center,rgba(130,140,220,.35),transparent 70%);
+  }
+  .menu a::after{
+    content:"";position:absolute;left:0;bottom:-2px;height:2px;width:0;
+    background:var(--navy);transition:width .25s;
+  }
+  .menu a:hover::after{width:100%}
+  .lang{background:none;border:0;color:var(--navy);cursor:pointer;margin-left:-20px;display:grid;place-items:center}
+  .lang svg{width:34px;height:34px}
+
+  /* ---------- Gallery ---------- */
+  .gallery{
+    position:relative;z-index:1;
+    padding:200px 0 120px;
+  }
+  .title{
+    font-size:clamp(52px,6vw,88px);
+    font-weight:700;line-height:1.1;
+    padding-left:13.5vw;
+    margin-bottom:64px;
+  }
+
+  .stage{
+    position:relative;
+    height:calc(var(--w) * .5625);   /* 16:9 */
+    overflow:hidden;
+    outline:none;
+  }
+  .stage:focus-visible{outline:3px solid #7b86d8;outline-offset:6px}
+  .track{position:absolute;inset:0}
+
+  .slide{
+    --pos:0; --s:.75;
+    position:absolute;left:50%;top:0;
+    width:var(--w);height:100%;
+    border-radius:36px;overflow:hidden;
+    transform:translateX(-50%) translateX(calc(var(--pos) * var(--step))) scale(var(--s));
+    transition:transform .7s var(--ease), opacity .5s;
+    opacity:0;pointer-events:none;
+    background:#cfd3e6;
+    user-select:none;
+  }
+  .slide img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none}
+  .slide::after{                         /* 隣の写真は白くかすませる */
+    content:"";position:absolute;inset:0;
+    background:rgba(237,232,228,.62);
+    transition:opacity .6s;
+  }
+  .slide.is-active{--s:1;opacity:1;pointer-events:auto}
+  .slide.is-active::after{opacity:0}
+  .slide.is-side{--s:.87;opacity:1;pointer-events:auto;cursor:pointer}
+
+  /* 拡大ボタン */
+  .zoom{
+    position:absolute;top:12px;right:12px;z-index:2;
+    width:54px;height:54px;border-radius:50%;
+    display:grid;place-items:center;
+    background:#fff;border:0;color:var(--navy);cursor:pointer;
+    opacity:0;pointer-events:none;transition:opacity .3s,transform .2s;
+  }
+  .slide.is-active .zoom{opacity:1;pointer-events:auto}
+  .zoom:hover{transform:scale(1.08)}
+  .zoom svg{width:26px;height:26px}
+
+  /* 前後の矢印(隣の写真の中央に重ねる) */
+  .arrow{
+    position:absolute;top:50%;z-index:3;
+    width:72px;height:72px;border-radius:50%;
+    display:grid;place-items:center;
+    background:var(--navy);color:#fff;border:0;cursor:pointer;
+    transform:translate(-50%,-50%);
+    transition:transform .2s,background .2s;
+  }
+  .arrow:hover{background:#3d4a85;transform:translate(-50%,-50%) scale(1.08)}
+  .arrow:focus-visible,.zoom:focus-visible,.cta:focus-visible{outline:3px solid #7b86d8;outline-offset:3px}
+  .arrow svg{width:26px;height:26px}
+  .arrow.prev{left:calc(50% - var(--step))}
+  .arrow.next{left:calc(50% + var(--step))}
+
+  /* ---------- 下段: カウンタ + ボタン ---------- */
+  .foot{
+    width:var(--w);margin:32px auto 0;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+  }
+  .counter{display:flex;align-items:center;flex:0 1 420px}
+  .count{
+    flex:none;
+    width:60px;height:60px;border-radius:50%;
+    display:grid;place-items:center;
+    background:var(--navy);color:#fff;font-weight:700;font-size:21px;
+    font-variant-numeric:tabular-nums;
+  }
+  .bar{position:relative;flex:1;height:2px;background:rgba(47,58,107,.25)}
+  .bar i{
+    position:absolute;left:0;top:0;height:100%;width:0;
+    background:var(--navy);transition:width .6s var(--ease);
+  }
+
+  .cta{
+    flex:none;
+    display:flex;align-items:center;gap:40px;
+    padding:26px 36px;border-radius:30px;
+    font-size:26px;font-weight:600;letter-spacing:.01em;
+    color:#fff;text-decoration:none;
+    background:linear-gradient(100deg,var(--navy) 35%,var(--navy-soft));
+    transition:transform .25s,box-shadow .25s;
+  }
+  .cta:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(47,58,107,.25)}
+  .cta .circle{
+    width:54px;height:54px;border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.9);
+    display:grid;place-items:center;
+  }
+  .cta .circle svg{width:28px;height:28px;transition:transform .25s}
+  .cta:hover .circle svg{transform:translateX(4px)}
+
+  /* ---------- Project(3枚並びのスライダー) ---------- */
+  .project{
+    position:relative;z-index:1;
+    --per:3;                       /* 同時に見せる枚数(JSが読み取る) */
+    --pgap:32px;
+    padding:40px 0 200px;
+  }
+  .project .title{margin-bottom:48px}
+  .p-view{
+    overflow:hidden;
+    margin:0 6.2vw;
+    padding:6px 0 10px;
+    touch-action:pan-y;
+  }
+  .p-track{
+    display:flex;gap:var(--pgap);
+    transition:transform .7s var(--ease);
+    will-change:transform;
+  }
+  .p-card{
+    flex:0 0 calc((100% - var(--pgap) * (var(--per) - 1)) / var(--per));
+    min-width:0;
+    text-decoration:none;color:inherit;
+  }
+  .p-card .ph{
+    aspect-ratio:4/3;border-radius:30px;overflow:hidden;
+    background:#cfd3e6;
+  }
+  .p-card img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .6s var(--ease);
+    -webkit-user-drag:none;user-select:none;
+  }
+  .p-card:hover img{transform:scale(1.05)}
+  .p-card .tag{
+    display:inline-block;margin:20px 0 8px;
+    padding:4px 14px;border-radius:999px;
+    font-size:14px;font-weight:700;letter-spacing:.06em;
+    background:rgba(242,169,59,.28);color:#8a5a10;
+  }
+  .p-card h3{font-size:clamp(20px,1.7vw,28px);line-height:1.35;margin-bottom:6px}
+  .p-card p{font-size:16px;opacity:.85}
+
+  .p-foot{
+    margin:36px 6.2vw 0;
+    display:flex;align-items:center;gap:28px;
+  }
+  .p-bar{position:relative;flex:1;height:2px;background:rgba(47,58,107,.25)}
+  .p-bar i{
+    position:absolute;left:0;top:0;height:100%;width:0;
+    background:var(--navy);transition:width .6s var(--ease);
+  }
+  .p-btns{display:flex;gap:14px}
+  .p-btn{
+    width:64px;height:64px;border-radius:50%;border:0;
+    display:grid;place-items:center;
+    background:var(--navy);color:#fff;cursor:pointer;
+    transition:transform .2s,opacity .3s,background .2s;
+  }
+  .p-btn:hover:not(:disabled){background:#3d4a85;transform:scale(1.08)}
+  .p-btn:disabled{opacity:.3;cursor:default}
+  .p-btn:focus-visible{outline:3px solid #7b86d8;outline-offset:3px}
+  .p-btn svg{width:24px;height:24px}
+  @media (max-width:1000px){.project{--per:2}}
+  @media (max-width:640px){
+    .project{--per:1;--pgap:20px}
+    .p-view,.p-foot{margin-left:5vw;margin-right:5vw}
+    .p-btn{width:52px;height:52px}
+    .project .title{padding-left:10vw}
+  }
+
+  /* ---------- Members(メンバー紹介) ---------- */
+  .members{
+    position:relative;z-index:1;
+    padding:40px 0 160px;
+  }
+  .members .title{margin-bottom:20px}
+  .members .lead{
+    padding-left:13.5vw;margin-bottom:36px;
+    max-width:calc(13.5vw + 640px);
+    font-size:19px;
+  }
+  .filters{
+    display:flex;flex-wrap:wrap;gap:12px;
+    margin:0 6.2vw 36px;
+  }
+  .chip{
+    padding:12px 26px;border-radius:999px;
+    font-family:inherit;font-weight:600;font-size:17px;line-height:1;
+    color:var(--navy);
+    background:rgba(251,249,247,.8);
+    border:1.5px solid rgba(47,58,107,.25);
+    cursor:pointer;
+    transition:background .25s,color .25s,border-color .25s,transform .2s;
+  }
+  .chip:hover{transform:translateY(-2px);border-color:var(--navy)}
+  .chip[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .chip:focus-visible{outline:3px solid #7b86d8;outline-offset:3px}
+
+  .member-grid{
+    margin:0 6.2vw;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:28px;
+  }
+  .member{
+    padding:18px 18px 26px;
+    background:rgba(251,249,247,.78);
+    backdrop-filter:blur(10px);
+    border-radius:32px;
+    transition:transform .4s var(--ease),box-shadow .4s;
+    animation:pop .5s var(--ease) both;
+  }
+  .member:hover{transform:translateY(-8px);box-shadow:0 18px 36px rgba(47,58,107,.16)}
+  .member.is-hide{display:none}
+  @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .member .avatar{
+    aspect-ratio:1;border-radius:24px;overflow:hidden;
+    margin-bottom:20px;
+  }
+  .member .avatar img,.member .avatar svg{
+    width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .6s var(--ease);
+  }
+  .member:hover .avatar img,.member:hover .avatar svg{transform:scale(1.06)}
+  .member .meta{padding:0 6px}
+  .member .group{
+    display:inline-block;margin-bottom:10px;
+    padding:3px 12px;border-radius:999px;
+    font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    background:rgba(242,169,59,.28);color:#8a5a10;
+  }
+  .member .group.research{background:rgba(110,168,220,.28);color:#2d5e8f}
+  .member .group.design{background:rgba(247,205,189,.7);color:#9a4a2e}
+  .member .group.community{background:rgba(95,191,150,.28);color:#25704f}
+  .member h3{font-size:24px;line-height:1.3}
+  .member .role{font-size:15px;font-weight:600;opacity:.75;margin:2px 0 12px}
+  .member .bio{
+    font-size:16px;line-height:1.65;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  @media (max-width:760px){
+    .members .lead{padding-left:10vw;padding-right:6vw}
+    .members .title{padding-left:10vw}
+    .filters,.member-grid{margin-left:5vw;margin-right:5vw}
+    .member-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+    .chip{padding:10px 18px;font-size:15px}
+  }
+  @media (prefers-reduced-motion:reduce){.member{animation:none}}
+
+  /* ---------- News(お知らせ一覧: 1件1行・点線区切り) ---------- */
+  .news{
+    position:relative;z-index:1;
+    padding:0 0 220px;
+  }
+  .news .title{margin-bottom:40px}
+  .news-box{
+    margin:0 6.2vw;
+    padding:12px 44px;
+    background:rgba(251,249,247,.72);
+    backdrop-filter:blur(10px);
+    border-radius:32px;
+  }
+  .news-list{list-style:none}
+  .news-list li{border-bottom:2px dotted rgba(47,58,107,.4)}   /* 各お知らせの間を点線で区切る */
+  .news-list li:last-child{border-bottom:0}
+  .news-item{
+    display:flex;align-items:center;gap:28px;
+    padding:26px 4px;
+    color:var(--navy);text-decoration:none;
+    transition:background .25s,padding .25s;
+  }
+  .news-item:hover{padding-left:14px;padding-right:14px;background:rgba(47,58,107,.05);border-radius:16px}
+  .news-item time{
+    flex:none;
+    font-size:18px;font-weight:700;color:var(--teal,#46737a);
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+  .news-item .cat{
+    flex:none;min-width:112px;text-align:center;
+    padding:4px 14px;border-radius:999px;
+    font-size:14px;font-weight:700;letter-spacing:.06em;
+    background:rgba(242,169,59,.28);color:#8a5a10;
+  }
+  .news-item .cat.info{background:rgba(110,168,220,.28);color:#2d5e8f}
+  .news-item .cat.event{background:rgba(95,191,150,.28);color:#25704f}
+  .news-item .txt{                     /* 1行で表示。長い場合は … で省略 */
+    flex:1;min-width:0;
+    font-size:20px;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .news-item .go{flex:none;width:26px;height:26px;transition:transform .25s}
+  .news-item:hover .go{transform:translateX(5px)}
+  .news-more{
+    display:flex;justify-content:flex-end;
+    margin:28px 6.2vw 0;
+  }
+  .news-more a{
+    display:inline-flex;align-items:center;gap:14px;
+    font-size:20px;font-weight:700;color:var(--navy);text-decoration:none;
+  }
+  .news-more .circle{
+    width:48px;height:48px;border-radius:50%;
+    display:grid;place-items:center;
+    background:var(--navy);color:#fff;transition:transform .25s;
+  }
+  .news-more a:hover .circle{transform:translateX(4px)}
+  .news-more svg{width:22px;height:22px}
+  @media (max-width:760px){
+    .news-box{margin:0 4vw;padding:6px 20px}
+    .news-item{gap:12px;padding:20px 2px}
+    .news-item time{font-size:14px}
+    .news-item .cat{display:none}
+    .news-item .txt{font-size:16px}
+    .news .title{padding-left:10vw}
+  }
+
+  /* ---------- ライトボックス ---------- */
+  dialog{
+    border:0;background:transparent;max-width:none;max-height:none;
+    width:100vw;height:100vh;
+    display:none;place-items:center;
+  }
+  dialog[open]{display:grid}
+  dialog::backdrop{background:rgba(20,24,48,.82);backdrop-filter:blur(4px)}
+  dialog img{max-width:92vw;max-height:86vh;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  dialog .close{
+    position:absolute;top:24px;right:24px;
+    width:56px;height:56px;border-radius:50%;border:0;
+    background:#fff;color:var(--navy);font-size:28px;cursor:pointer;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1100px){
+    .menu{gap:28px}.menu a{font-size:17px}.brand{font-size:22px}
+    .cta{font-size:20px;gap:24px;padding:20px 26px}
+  }
+  @media (max-width:760px){
+    :root{--w:80vw;--gap:4vw}
+    .nav{height:auto;padding:14px 18px;left:12px;right:12px;top:12px;flex-direction:column;gap:8px;border-radius:26px}
+    .menu{flex-wrap:wrap;justify-content:center;gap:6px 18px}
+    .menu a{font-size:14px}
+    .lang{display:none}
+    .gallery{padding-top:190px}
+    .title{padding-left:10vw;margin-bottom:32px}
+    .slide{border-radius:22px}
+    .arrow{width:52px;height:52px}.arrow svg{width:20px;height:20px}
+    .foot{flex-direction:column;align-items:stretch}
+    .cta{justify-content:space-between}
+    .count{width:50px;height:50px;font-size:17px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .bg g{animation:none}
+    .slide,.bar i{transition-duration:.01s}
+  }
+</style>
 </head>
 <body>
-    
+
+<!-- 背景のリボン -->
+<svg class="bg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <g><path class="pink"   d="M520 1160 C640 900 760 520 900 260 C960 150 1010 40 1060 -60"/></g>
+  <g><path class="orange" d="M560 -40 C800 120 1120 250 1500 420 C1700 510 1880 620 2000 700"/></g>
+  <g><path class="blue"   d="M960 -60 C1060 150 1160 320 1240 480 C1330 660 1420 820 1580 1160"/></g>
+  <g><path class="green"  d="M1520 -60 C1500 180 1440 300 1330 420 C1200 560 1100 700 900 880 C780 980 660 1090 540 1180"/></g>
+</svg>
+
+<!-- ナビ -->
+<header class="nav">
+  <a class="brand" href="#">
+    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+      <rect x="5" y="5" width="30" height="30" rx="6"/>
+      <path d="M5 14c10 0 10 12 20 12s10-8 10-8M5 26c10 0 10-12 20-12"/>
+    </svg>
+    Weave City
+  </a>
+  <nav aria-label="メインメニュー">
+    <ul class="menu">
+      <li><a class="active" href="#">Home</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">People</a></li>
+      <li><a href="#">Co-Creation</a></li>
+      <li><a href="#">News</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </nav>
+  <button class="lang" aria-label="言語を切り替え">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+      <circle cx="16" cy="16" r="13"/><ellipse cx="16" cy="16" rx="6" ry="13"/>
+      <path d="M3 16h26M5 9h22M5 23h22"/>
+    </svg>
+  </button>
+</header>
+
+<main class="gallery">
+  <h2 class="title">Gallery</h2>
+
+  <div class="stage" id="stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Gallery">
+    <div class="track" id="track"></div>
+
+    <button class="arrow prev" id="prev" aria-label="前の写真">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
+    </button>
+    <button class="arrow next" id="next" aria-label="次の写真">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
+    </button>
+  </div>
+
+  <div class="foot">
+    <div class="counter" aria-live="polite">
+      <span class="count" id="count">1/8</span>
+      <span class="bar"><i id="fill"></i></span>
+    </div>
+    <a class="cta" href="#">
+      Go to Media Kits
+      <span class="circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+  </div>
+</main>
+
+<section class="project" id="project" aria-roledescription="carousel" aria-label="Project">
+  <h2 class="title">Project</h2>
+  <div class="p-view" id="pView">
+    <div class="p-track" id="pTrack"></div>
+  </div>
+  <div class="p-foot">
+    <div class="p-bar"><i id="pFill"></i></div>
+    <div class="p-btns">
+      <button class="p-btn" id="pPrev" aria-label="前のプロジェクト">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg>
+      </button>
+      <button class="p-btn" id="pNext" aria-label="次のプロジェクト">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="members" id="members">
+  <h2 class="title">Members</h2>
+  <p class="lead">Meet the people behind Weave City — researchers, designers and community builders working side by side.</p>
+  <div class="filters" id="filters" role="group" aria-label="メンバーを絞り込む"></div>
+  <div class="member-grid" id="memberGrid"></div>
+</section>
+
+<section class="news" id="news">
+  <h2 class="title">News</h2>
+  <div class="news-box">
+    <ul class="news-list">
+      <li>
+        <a class="news-item" href="#">
+          <time datetime="2026-11-05">2026.11.05</time>
+          <span class="cat">Press</span>
+          <span class="txt">Media kit updated with new photos and fact sheets for the winter season</span>
+          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+      <li>
+        <a class="news-item" href="#">
+          <time datetime="2026-11-01">2026.11.01</time>
+          <span class="cat event">Event</span>
+          <span class="txt">Autumn open day for neighbors and visitors will be held on November 23</span>
+          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+      <li>
+        <a class="news-item" href="#">
+          <time datetime="2026-10-18">2026.10.18</time>
+          <span class="cat info">Info</span>
+          <span class="txt">New co-creation studio opens on the east side of the district</span>
+          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+      <li>
+        <a class="news-item" href="#">
+          <time datetime="2026-10-02">2026.10.02</time>
+          <span class="cat">Press</span>
+          <span class="txt">Call for partners: mobility and daily-life projects for the coming year</span>
+          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+      <li>
+        <a class="news-item" href="#">
+          <time datetime="2026-09-20">2026.09.20</time>
+          <span class="cat info">Info</span>
+          <span class="txt">Maintenance notice: the visitor reservation page will be unavailable on September 28</span>
+          <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="news-more">
+    <a href="#">View all news
+      <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg></span>
+    </a>
+  </div>
+</section>
+
+<dialog id="lightbox" aria-label="拡大表示">
+  <button class="close" id="close" aria-label="閉じる">×</button>
+  <img id="lbImg" alt="">
+</dialog>
+
+<script>
+(() => {
+  /* =====================================================
+     写真データ
+     ★ 自分の写真に差し替えるときは src に画像のURLを入れてください。
+       src を省略すると、下の scene() が作るダミーのイラストが表示されます。
+     ===================================================== */
+  const photos = [
+    { alt:'Main hall under a bright sky' },
+    { alt:'Garden walkway at sunset' },
+    { alt:'Residential terrace at dusk' },
+    { alt:'Courtyard with young trees' },
+    { alt:'Workshop building in warm light' },
+    { alt:'Quiet street on a cloudy day' },
+    { alt:'Plaza after dark' },
+    { alt:'Spring morning by the studio' },
+  ];
+
+  /* ---- ダミー画像(SVG)を生成 ---- */
+  const palettes = [
+    ['#1b8be0','#a6d4f6','#d6d9dd','#8a919b','#6aa84f'],
+    ['#f09a50','#fbe3b8','#ecd9c4','#a8745a','#7c9a5a'],
+    ['#37468a','#9ca7da','#cdd2e6','#5f6aa0','#4d7a6a'],
+    ['#5ec8b4','#d6f3ea','#eef1ee','#8fa6a0','#78b36b'],
+    ['#e5775a','#f9d6bc','#f1e1d2','#b0675a','#8aa860'],
+    ['#7e94a8','#dde5ec','#e4e7ea','#7d8793','#7fa07a'],
+    ['#1f2a55','#5a669f','#aab2d4','#49527f','#35564a'],
+    ['#7ec4f2','#f6f1d1','#fbfbf8','#a3aab3','#8cc36a'],
+  ];
+  function scene(i){
+    const [sky1,sky2,wall,roof,grass] = palettes[i % palettes.length];
+    const bx = 260 + (i*53)%260, bw = 720 + (i*41)%200, by = 360 + (i%3)*20, bh = 250;
+    let windows='';
+    const cols = 8 + i%3, rows = 3;
+    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++){
+      const x = bx+30 + c*((bw-60)/cols), y = by+34 + r*70;
+      windows += `<rect x="${x.toFixed(0)}" y="${y}" width="${((bw-60)/cols-18).toFixed(0)}" height="44" rx="4" fill="#2b3a5c" opacity=".55"/>`;
+    }
+    let trees='';
+    for (let t=0;t<7;t++){
+      const x = 120 + t*(1360/6) + ((i*29+t*47)%60);
+      const s = 34 + ((i+t)*13)%26;
+      trees += `<rect x="${x-4}" y="${600-s}" width="8" height="${s+30}" fill="#5a4a3a"/><circle cx="${x}" cy="${600-s-8}" r="${s}" fill="${grass}"/>`;
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky1}"/><stop offset="1" stop-color="${sky2}"/></linearGradient></defs>
+      <rect width="1600" height="900" fill="url(#g)"/>
+      <circle cx="${1200-i*40}" cy="${170+(i%4)*20}" r="70" fill="#fff" opacity=".75"/>
+      <ellipse cx="320" cy="180" rx="190" ry="48" fill="#fff" opacity=".8"/>
+      <ellipse cx="520" cy="215" rx="150" ry="38" fill="#fff" opacity=".7"/>
+      <ellipse cx="1080" cy="120" rx="170" ry="40" fill="#fff" opacity=".75"/>
+      <polygon points="0,520 220,400 430,520 640,420 900,540 1200,430 1600,560 1600,640 0,640" fill="${roof}" opacity=".35"/>
+      <rect y="590" width="1600" height="310" fill="${grass}"/>
+      <polygon points="0,900 0,780 1600,700 1600,900" fill="#6d7480"/>
+      <polygon points="0,830 1600,745 1600,760 0,846" fill="#f1f1f1" opacity=".8"/>
+      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${wall}"/>
+      <polygon points="${bx-24},${by} ${bx+bw+24},${by} ${bx+bw-30},${by-46} ${bx+30},${by-46}" fill="${roof}"/>
+      ${windows}
+      <rect x="${bx+bw-20}" y="${by-90}" width="86" height="${bh+90}" fill="${roof}" opacity=".9"/>
+      ${trees}
+    </svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+
+  window.scene = scene;   // Projectセクションでも同じダミー画像を使う
+
+  /* ---- DOM生成 ---- */
+  const track = document.getElementById('track');
+  const stage = document.getElementById('stage');
+  const count = document.getElementById('count');
+  const fill  = document.getElementById('fill');
+  const n = photos.length;
+  let cur = 0;
+
+  const zoomIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"/></svg>';
+
+  const slides = photos.map((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'slide';
+    el.setAttribute('role', 'group');
+    el.setAttribute('aria-roledescription', 'slide');
+    el.setAttribute('aria-label', `${i+1} / ${n}`);
+    const img = document.createElement('img');
+    img.src = p.src || scene(i);
+    img.alt = p.alt;
+    img.draggable = false;
+    img.loading = 'lazy';
+    const zoom = document.createElement('button');
+    zoom.className = 'zoom';
+    zoom.setAttribute('aria-label', '拡大して見る');
+    zoom.innerHTML = zoomIcon;
+    zoom.addEventListener('click', e => { e.stopPropagation(); openLightbox(i); });
+    el.append(img, zoom);
+    el.addEventListener('click', () => {
+      if (dragged) return;
+      if (el.classList.contains('is-side')) go(i);   // 隣の写真をクリックでそこへ移動
+    });
+    track.appendChild(el);
+    return el;
+  });
+
+  /* ---- 表示更新 ---- */
+  function layout(){
+    slides.forEach((el, i) => {
+      let d = i - cur;
+      if (d >  n/2) d -= n;
+      if (d <= -n/2) d += n;
+      el.style.setProperty('--pos', d);
+      el.classList.toggle('is-active', d === 0);
+      el.classList.toggle('is-side', Math.abs(d) === 1);
+      el.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
+      el.style.zIndex = d === 0 ? 2 : 1;
+      el.querySelector('.zoom').tabIndex = d === 0 ? 0 : -1;
+    });
+    count.textContent = `${cur+1}/${n}`;
+    fill.style.width = ((cur+1)/n*100) + '%';
+  }
+  function go(i){ cur = ((i % n) + n) % n; layout(); }
+  const next = () => go(cur + 1);
+  const prev = () => go(cur - 1);
+
+  document.getElementById('next').addEventListener('click', next);
+  document.getElementById('prev').addEventListener('click', prev);
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { next(); e.preventDefault(); }
+    if (e.key === 'ArrowLeft')  { prev(); e.preventDefault(); }
+  });
+
+  /* ---- ドラッグ / スワイプ ---- */
+  let startX = null, dragged = false;
+  stage.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    startX = e.clientX; dragged = false;
+  });
+  window.addEventListener('pointermove', e => {
+    if (startX !== null && Math.abs(e.clientX - startX) > 8) dragged = true;
+  });
+  window.addEventListener('pointerup', e => {
+    if (startX === null) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 50) (dx < 0 ? next : prev)();
+    startX = null;
+    setTimeout(() => dragged = false, 0);
+  });
+
+  /* ---- ライトボックス ---- */
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  function openLightbox(i){
+    lbImg.src = slides[i].querySelector('img').src;
+    lbImg.alt = photos[i].alt;
+    lb.showModal();
+  }
+  document.getElementById('close').addEventListener('click', () => lb.close());
+  lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
+
+  layout();
+})();
+</script>
+
+<script>
+(() => {
+  /* =====================================================
+     Project: 3枚を横に並べ、横にずらして切り替えるスライダー
+     ★ 自分の画像を使うときは src を指定してください。
+     ===================================================== */
+  const projects = [
+    { tag:'Mobility',  title:'Slow Streets Lab',        text:'Testing quiet, human-scale ways to move around the city.' },
+    { tag:'Community', title:'Shared Garden Network',   text:'Neighbors grow, trade and learn together on every block.' },
+    { tag:'Energy',    title:'Open Energy Commons',     text:'A neighborhood grid where households share what they make.' },
+    { tag:'Care',      title:'Check-in Circles',        text:'Light-touch support that keeps people connected.' },
+    { tag:'Culture',   title:'Pop-up Makers Market',    text:'Local makers and visitors meet in ever-changing spaces.' },
+    { tag:'Sensing',   title:'Listening Walks',         text:'Residents map sound, light and comfort along familiar routes.' },
+  ];
+
+  const view  = document.getElementById('pView');
+  const track = document.getElementById('pTrack');
+  const fill  = document.getElementById('pFill');
+  const prevB = document.getElementById('pPrev');
+  const nextB = document.getElementById('pNext');
+  const root  = document.getElementById('project');
+  const n = projects.length;
+  let idx = 0;
+
+  projects.forEach((p, i) => {
+    const a = document.createElement('a');
+    a.className = 'p-card';
+    a.href = '#';
+    a.draggable = false;
+    a.innerHTML = `
+      <div class="ph"><img alt="" draggable="false" loading="lazy"></div>
+      <span class="tag"></span>
+      <h3></h3>
+      <p></p>`;
+    a.querySelector('img').src = p.src || (window.scene ? window.scene(i + 3) : '');
+    a.querySelector('img').alt = p.title;
+    a.querySelector('.tag').textContent = p.tag;
+    a.querySelector('h3').textContent = p.title;
+    a.querySelector('p').textContent = p.text;
+    a.addEventListener('click', e => { if (dragged) e.preventDefault(); });
+    track.appendChild(a);
+  });
+
+  const perView = () => parseInt(getComputedStyle(root).getPropertyValue('--per'), 10) || 3;
+  const maxIdx  = () => Math.max(0, n - perView());
+
+  function update(){
+    idx = Math.min(Math.max(idx, 0), maxIdx());
+    const card = track.children[0];
+    const gap  = parseFloat(getComputedStyle(track).columnGap) || 0;
+    const step = card.getBoundingClientRect().width + gap;
+    track.style.transform = `translateX(${-idx * step}px)`;   // 1枚分ずつ横にずらす
+    prevB.disabled = idx === 0;
+    nextB.disabled = idx >= maxIdx();
+    // 進捗: 表示中の右端が全体のどこまで進んだか
+    fill.style.width = ((idx + perView()) / n * 100) + '%';
+    [...track.children].forEach((c, i) => {
+      const visible = i >= idx && i < idx + perView();
+      c.tabIndex = visible ? 0 : -1;
+      c.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    });
+  }
+  prevB.addEventListener('click', () => { idx--; update(); });
+  nextB.addEventListener('click', () => { idx++; update(); });
+  addEventListener('resize', update);
+
+  /* ---- ドラッグ / スワイプで1枚ずらす ---- */
+  let sx = null, dragged = false;
+  view.addEventListener('pointerdown', e => { sx = e.clientX; dragged = false; });
+  addEventListener('pointermove', e => {
+    if (sx !== null && Math.abs(e.clientX - sx) > 8) dragged = true;
+  });
+  addEventListener('pointerup', e => {
+    if (sx === null) return;
+    const dx = e.clientX - sx;
+    if (Math.abs(dx) > 50){ idx += dx < 0 ? 1 : -1; update(); }
+    sx = null;
+    setTimeout(() => dragged = false, 0);
+  });
+
+  update();
+})();
+</script>
+<script>
+(() => {
+  /* =====================================================
+     Members: メンバー紹介カード + グループ絞り込み
+     ★ 実際の写真を使うときは src に画像のURLを指定してください。
+       省略すると、色付きのイラスト風アバターが自動で作られます。
+     ===================================================== */
+  const members = [
+    { name:'Haruka Mori',    role:'Representative',     group:'Core',      bio:'Founded the group to connect people, ideas and places. Loves long walks and short meetings.' },
+    { name:'Daniel Okafor',  role:'Research Lead',      group:'Research',  bio:'Studies how everyday routines change when neighborhoods are designed together.' },
+    { name:'Mei Lin',        role:'Design Director',    group:'Design',    bio:'Shapes the look and feel of every space, from signage to the smallest garden bench.' },
+    { name:'Lucas Silva',    role:'Community Manager',  group:'Community', bio:'The friendly face at every open day. Keeps neighbors and projects in conversation.' },
+    { name:'Aiko Tanaka',    role:'Mobility Researcher',group:'Research',  bio:'Tests quiet, human-scale ways of moving around, one slow street at a time.' },
+    { name:'Sofia Rossi',    role:'Product Designer',   group:'Design',    bio:'Turns rough sketches into tools residents actually enjoy using every day.' },
+    { name:'Kenji Watanabe', role:'Partnerships',       group:'Core',      bio:'Brings new partners to the table and makes sure every voice gets a seat.' },
+    { name:'Priya Nair',     role:'Data Scientist',     group:'Research',  bio:'Finds the stories hidden in sensor data — always with residents\u2019 consent.' },
+  ];
+
+  /* ---- イラスト風アバター(SVG)を生成 ---- */
+  const bgs    = ['#f7cdbd','#cfe9dd','#cfe0f3','#f9e3b5','#e3dcf3'];
+  const shirts = ['#2f3a6b','#46737a','#e2622b','#5b6fb5','#2f3a6b'];
+  const skins  = ['#f2cfb3','#e0ae8a','#c68a65','#8d5a3b','#f6dcc6'];
+  const hairs  = ['#2b2420','#4a3022','#1c1c26','#7a5436','#a3724a'];
+  function avatar(i){
+    const bg=bgs[i%5], shirt=shirts[(i*2+1)%5], skin=skins[(i*3)%5], hair=hairs[(i*2)%5];
+    const style=i%3;
+    const back  = style===1 ? `<path d="M56 104C48 46 80 36 100 36s52 10 44 68v50H56Z" fill="${hair}"/>` : '';
+    const bun   = style===2 ? `<circle cx="100" cy="40" r="17" fill="${hair}"/>` : '';
+    const front = style===1
+      ? `<path d="M62 86C70 54 130 52 138 86 120 70 80 70 62 86Z" fill="${hair}"/>`
+      : `<path d="M60 90C56 54 80 44 102 46c26 2 40 20 38 44-12-16-28-20-40-20-16 0-30 6-40 20Z" fill="${hair}"/>`;
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-hidden="true">
+      <rect width="200" height="200" fill="${bg}"/>
+      <circle cx="${150-i*6}" cy="${40+(i%3)*10}" r="26" fill="#fff" opacity=".55"/>
+      ${back}
+      <path d="M26 200C26 152 66 136 100 136s74 16 74 64Z" fill="${shirt}"/>
+      <rect x="88" y="116" width="24" height="26" rx="10" fill="${skin}"/>
+      <circle cx="100" cy="92" r="38" fill="${skin}"/>
+      ${bun}${front}
+      <circle cx="86" cy="96" r="3.4" fill="#2b2420"/><circle cx="114" cy="96" r="3.4" fill="#2b2420"/>
+      <path d="M90 110q10 8 20 0" fill="none" stroke="#2b2420" stroke-width="3" stroke-linecap="round"/>
+    </svg>`;
+    return 'data:image/svg+xml;utf8,'+encodeURIComponent(svg);
+  }
+
+  /* ---- カード生成 ---- */
+  const grid = document.getElementById('memberGrid');
+  const filters = document.getElementById('filters');
+  const groups = ['All', ...new Set(members.map(m => m.group))];
+
+  members.forEach((m, i) => {
+    const card = document.createElement('article');
+    card.className = 'member';
+    card.dataset.group = m.group;
+    card.style.animationDelay = (i * 0.05) + 's';
+    card.innerHTML = `
+      <div class="avatar"><img alt="" loading="lazy"></div>
+      <div class="meta">
+        <span class="group"></span>
+        <h3></h3>
+        <p class="role"></p>
+        <p class="bio"></p>
+      </div>`;
+    const img = card.querySelector('img');
+    img.src = m.src || avatar(i);
+    img.alt = `${m.name}のポートレート`;
+    const g = card.querySelector('.group');
+    g.textContent = m.group;
+    g.classList.add(m.group.toLowerCase());
+    card.querySelector('h3').textContent = m.name;
+    card.querySelector('.role').textContent = m.role;
+    card.querySelector('.bio').textContent = m.bio;
+    grid.appendChild(card);
+  });
+
+  /* ---- 絞り込みボタン ---- */
+  groups.forEach((g, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.type = 'button';
+    b.textContent = g;
+    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    b.addEventListener('click', () => {
+      filters.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === b)));
+      let k = 0;
+      grid.querySelectorAll('.member').forEach(card => {
+        const show = g === 'All' || card.dataset.group === g;
+        card.classList.toggle('is-hide', !show);
+        if (show){                       // 再表示のたびにふわっと出す
+          card.style.animation = 'none'; card.offsetHeight;
+          card.style.animation = ''; card.style.animationDelay = (k++ * 0.05) + 's';
+        }
+      });
+    });
+    filters.appendChild(b);
+  });
+})();
+</script>
 </body>
 </html>
